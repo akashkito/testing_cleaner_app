@@ -546,6 +546,7 @@ class _AppsPageState extends State<AppsPage> with SingleTickerProviderStateMixin
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Total Apps: ${filteredApps.length}',
