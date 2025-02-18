@@ -1,76 +1,90 @@
 package com.example.testing_cleaner_app
 
-import android.os.AsyncTask
-import java.net.URL
-import java.io.BufferedInputStream
-import java.net.HttpURLConnection
-import java.io.OutputStream
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.TrafficStats
+import androidx.core.app.ActivityCompat
+import kotlin.concurrent.thread
 
 object SpeedTestUtil {
 
-    // Function to start speed test (both upload and download)
-    fun startSpeedTest(callback: (String) -> Unit) {
-        // Run async task to perform the speed test
-        SpeedTestTask(callback).execute()
+    // Start the speed test process
+    fun startSpeedTest(context: Context, callback: (speedResult: Map<String, String>) -> Unit) {
+        // Check permissions before proceeding with the speed test
+        if (checkPermissions(context)) {
+            // Proceed with speed test
+            performSpeedTest(context, callback)
+        } else {
+            // Permissions not granted, callback with error message
+            callback(mapOf("error" to "Permissions not granted"))
+        }
     }
 
-    // AsyncTask for download speed testing
-    private class SpeedTestTask(val callback: (String) -> Unit) : AsyncTask<Void, Void, String>() {
+    // Check if required permissions are granted
+    private fun checkPermissions(context: Context): Boolean {
+        // Check ACCESS_FINE_LOCATION and ACCESS_NETWORK_STATE permissions
+        val locationPermission = ActivityCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        val networkPermission = ActivityCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_NETWORK_STATE
+        )
+        return locationPermission == PackageManager.PERMISSION_GRANTED &&
+                networkPermission == PackageManager.PERMISSION_GRANTED
+    }
 
-        override fun doInBackground(vararg params: Void?): String {
-            var downloadSpeed = 0L
-            var uploadSpeed = 0L
-            val testDownloadUrl = "https://speed.hetzner.de/100MB.bin" // Example test URL for download
-            val testUploadUrl = "https://youruploadserver.com/upload" // Replace with your server's upload endpoint
-            
+    // Perform the speed test if permissions are granted
+    private fun performSpeedTest(context: Context, callback: (speedResult: Map<String, String>) -> Unit) {
+        thread {
             try {
-                // Download speed test
-                val downloadUrl = URL(testDownloadUrl)
-                val connection: HttpURLConnection = downloadUrl.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0")
-                connection.connect()
+                // Get the initial traffic statistics
+                val initialBytesReceived = TrafficStats.getTotalRxBytes()
+                val initialBytesSent = TrafficStats.getTotalTxBytes()
 
-                val inputStream = BufferedInputStream(connection.inputStream)
-                val startTime = System.nanoTime()
-                val buffer = ByteArray(1024)
+                // Wait for 1 second (or you can customize this time period)
+                Thread.sleep(1000)
 
-                while (inputStream.read(buffer) != -1) {
-                    // Simulate downloading file data
-                }
+                // Get the traffic stats after 1 second
+                val finalBytesReceived = TrafficStats.getTotalRxBytes()
+                val finalBytesSent = TrafficStats.getTotalTxBytes()
 
-                val endTime = System.nanoTime()
-                downloadSpeed = (endTime - startTime) / 1000000 // Time in milliseconds for download
+                // Calculate the download/upload speeds
+                val downloadSpeed = (finalBytesReceived - initialBytesReceived) / 1024.0 / 1024.0 // in Mbps
+                val uploadSpeed = (finalBytesSent - initialBytesSent) / 1024.0 / 1024.0 // in Mbps
 
-                // For upload speed, we simulate uploading a small file
-                val uploadData = ByteArray(1024 * 10) // 10 KB of data to simulate upload
-                val uploadStartTime = System.nanoTime()
-                
-                // Upload logic (you would need to replace the upload URL with your actual server endpoint)
-                val uploadUrl = URL(testUploadUrl)
-                val uploadConnection: HttpURLConnection = uploadUrl.openConnection() as HttpURLConnection
-                uploadConnection.requestMethod = "POST"
-                uploadConnection.setRequestProperty("Content-Type", "application/octet-stream")
-                uploadConnection.doOutput = true
-                val outputStream: OutputStream = uploadConnection.outputStream
-                outputStream.write(uploadData)
-                outputStream.flush()
+                // Get the network type (Wi-Fi or mobile data)
+                val networkType = getNetworkType(context)
 
-                val uploadEndTime = System.nanoTime()
-                uploadSpeed = (uploadEndTime - uploadStartTime) / 1000000 // Time in milliseconds for upload
+                // Prepare the result
+                val speedResult = mapOf(
+                    "download" to String.format("%.2f Mbps", downloadSpeed),
+                    "upload" to String.format("%.2f Mbps", uploadSpeed),
+                    "networkType" to networkType
+                )
 
+                // Send the result back via callback
+                callback(speedResult)
             } catch (e: Exception) {
                 e.printStackTrace()
-                return "Speed test failed"
+                callback(mapOf("error" to "Speed test failed: ${e.localizedMessage}"))
             }
-
-            // Return formatted result
-            return "Download Speed: ${downloadSpeed}ms\nUpload Speed: ${uploadSpeed}ms"
         }
+    }
 
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            callback(result ?: "Speed test failed")
+    // Get the network type (Wi-Fi or Mobile)
+    private fun getNetworkType(context: Context): String {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+
+        return when {
+            networkCapabilities == null -> "No Network"
+            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "Wi-Fi"
+            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Mobile Data"
+            else -> "Unknown"
         }
     }
 }

@@ -1,25 +1,43 @@
 package com.example.testing_cleaner_app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
+import androidx.annotation.NonNull
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.embedding.engine.FlutterEngine
-import androidx.annotation.NonNull
-import android.widget.Toast
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.testing_cleaner_app"
+    
+    // Permission request code
+    private val PERMISSION_REQUEST_CODE = 1
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
+
+                // Handle startSpeedTest method call
                 "startSpeedTest" -> {
-                    SpeedTestUtil.startSpeedTest { speedResult ->
-                        result.success(speedResult)
+                    if (checkPermissions()) {
+                        // Call the SpeedTestUtil class to start the speed test
+                        SpeedTestUtil.startSpeedTest(applicationContext) { speedResult ->
+                            result.success(speedResult)
+                        }
+                    } else {
+                        // Request permissions if not granted
+                        requestPermissions()
+                        result.error("PERMISSION_DENIED", "Required permissions not granted", null)
                     }
                 }
+
                 "getBatteryLevel" -> {
                     val batteryLevel = BatteryInfo.getBatteryLevel(applicationContext)
                     if (batteryLevel != -1) result.success(batteryLevel)
@@ -83,7 +101,42 @@ class MainActivity : FlutterActivity() {
                     val junkFiles = getJunkFiles(applicationContext)
                     result.success(junkFiles)
                 }
+                
                 else -> result.notImplemented()
+            }
+        }
+    }
+
+    // Check if the necessary permissions are granted
+    private fun checkPermissions(): Boolean {
+        val locationPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        val networkPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_NETWORK_STATE
+        )
+        return locationPermission == PackageManager.PERMISSION_GRANTED &&
+                networkPermission == PackageManager.PERMISSION_GRANTED
+    }
+
+    // Request the necessary permissions
+    private fun requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_NETWORK_STATE),
+                PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    // Handle permission request result
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permissions granted!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Permissions denied!", Toast.LENGTH_SHORT).show()
             }
         }
     }

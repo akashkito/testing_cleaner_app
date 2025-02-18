@@ -10,6 +10,7 @@ import java.io.File
 
 object MediaInfo {
 
+    // Get Audio files only if permission is granted
     fun getAudioFiles(activity: Activity): List<String> {
         val audioFiles = mutableListOf<String>()
         if (isPermissionGranted(activity)) {
@@ -21,13 +22,14 @@ object MediaInfo {
         return audioFiles
     }
 
+     // Get Photo files only if permission is granted
     fun getPhotoFiles(activity: Activity): List<String> {
         val photoFiles = mutableListOf<String>()
         if (isPermissionGranted(activity)) {
             val photosDirectory = File(Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera")
             if (photosDirectory.exists() && photosDirectory.isDirectory) {
                 val files = photosDirectory.listFiles()
-                files?.forEach { file ->
+                files?.forEach { file -> 
                     if (file.isFile && (file.name.endsWith(".jpg") || file.name.endsWith(".png"))) {
                         photoFiles.add(file.absolutePath)
                     }
@@ -39,6 +41,7 @@ object MediaInfo {
         return photoFiles
     }
 
+    // Get Video files only if permission is granted
     fun getVideoFiles(activity: Activity): List<String> {
         val videoFiles = mutableListOf<String>()
         if (isPermissionGranted(activity)) {
@@ -50,6 +53,7 @@ object MediaInfo {
         return videoFiles
     }
 
+    // Helper function to scan a directory for media files
     private fun scanDirectoryForMediaFiles(directory: File): List<String> {
         val mediaFiles = mutableListOf<String>()
         if (directory.exists() && directory.isDirectory) {
@@ -65,11 +69,15 @@ object MediaInfo {
 
     // Check if permission is granted
     private fun isPermissionGranted(activity: Activity): Boolean {
-        return (ContextCompat.checkSelfPermission(activity, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+        return ContextCompat.checkSelfPermission(
+            activity, android.Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     // Request permissions if not granted
     private fun requestPermissions(activity: Activity) {
-        ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+        ActivityCompat.requestPermissions(
+            activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1
+        )
     }
 }

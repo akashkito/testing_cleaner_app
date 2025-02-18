@@ -541,12 +541,14 @@ class _AppsPageState extends State<AppsPage> with SingleTickerProviderStateMixin
       body: filteredApps.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text(
                         'Total Apps: ${filteredApps.length}',
