@@ -2,10 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:testing_cleaner_app/media/videos_page.dart';
 import 'package:testing_cleaner_app/system_info_page.dart';
 import 'package:testing_cleaner_app/test/view_screen.dart';
 
 import '../apps/apps_page.dart';
+import '../media/audios_page.dart';
 import '../media/photos_page.dart';
 import '../storage/storage_service.dart';
 import '../storage/storage_widget.dart';
@@ -377,26 +379,26 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           MaterialPageRoute(builder: (context) => PhotosPage()),
                         ),
                       ),
-                      // _buildGridItem(
-                      //   context,
-                      //   "Videos",
-                      //   Icons.video_library,
-                      //   totalStorage,
-                      //   () => Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(builder: (context) => VideosPage()),
-                      //   ),
-                      // ),
-                      // _buildGridItem(
-                      //   context,
-                      //   "Audios",
-                      //   Icons.audiotrack,
-                      //   totalStorage,
-                      //   () => Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(builder: (context) => AudiosPage()),
-                      //   ),
-                      // ),
+                      _buildGridItem(
+                        context,
+                        "Videos",
+                        Icons.video_library,
+                        totalStorage,
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => VideosPage()),
+                        ),
+                      ),
+                      _buildGridItem(
+                        context,
+                        "Audios",
+                        Icons.audiotrack,
+                        totalStorage,
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => AudiosPage()),
+                        ),
+                      ),
                     ],
                   );
                 },
