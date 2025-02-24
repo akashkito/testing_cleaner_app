@@ -4,6 +4,8 @@ import 'package:testing_cleaner_app/test/premium_screen.dart';
 import 'package:testing_cleaner_app/test/speed_screen.dart';
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }
@@ -32,7 +34,7 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(bottom: 30, left: 40, right: 40, top: 10),
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.transparent
           ),
           child: Row(

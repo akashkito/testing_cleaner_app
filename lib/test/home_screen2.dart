@@ -2,11 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:testing_cleaner_app/files/all_files.dart';
+import 'package:testing_cleaner_app/media/video/videos_page.dart';
 import 'package:testing_cleaner_app/system_info_page.dart';
 import 'package:testing_cleaner_app/test/view_screen.dart';
 
 import '../apps/apps_page.dart';
-import '../media/photos_page.dart';
+import '../media/audios_page.dart';
+import '../media/photo/photos_page.dart';
 import '../storage/storage_service.dart';
 import '../storage/storage_widget.dart';
 
@@ -129,7 +132,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                     fontWeight: FontWeight.bold),
               ),
             ),
-            Divider(),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('System Info'),
@@ -281,11 +284,18 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           // Add InkWell for the pressed effect
                           onTap: () {
                             // Navigate to the next screen
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) =>
+                            //         const ViewPage(), // Replace with your next screen
+                            //   ),
+                            // );
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const ViewPage(), // Replace with your next screen
+                                     FolderAccessPage(), // Replace with your next screen
                               ),
                             );
                           },
@@ -317,7 +327,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                     getStorageInfo(), // Ensure this returns a Future<Map<String, dynamic>>
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
@@ -341,7 +351,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                             barrierDismissible:
                                 false, // Prevent dismissing the dialog by tapping outside
                             builder: (BuildContext context) {
-                              return Center(
+                              return const Center(
                                 child:
                                     CircularProgressIndicator(), // Show progress bar
                               );
@@ -349,7 +359,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           );
 
                           // Simulate a delay or data fetching here
-                          await Future.delayed(Duration(
+                          await Future.delayed(const Duration(
                               milliseconds:
                                   1000)); // Simulating delay for loading
 
@@ -377,26 +387,26 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           MaterialPageRoute(builder: (context) => PhotosPage()),
                         ),
                       ),
-                      // _buildGridItem(
-                      //   context,
-                      //   "Videos",
-                      //   Icons.video_library,
-                      //   totalStorage,
-                      //   () => Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(builder: (context) => VideosPage()),
-                      //   ),
-                      // ),
-                      // _buildGridItem(
-                      //   context,
-                      //   "Audios",
-                      //   Icons.audiotrack,
-                      //   totalStorage,
-                      //   () => Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(builder: (context) => AudiosPage()),
-                      //   ),
-                      // ),
+                      _buildGridItem(
+                        context,
+                        "Videos",
+                        Icons.video_library,
+                        totalStorage,
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => VideosPage()),
+                        ),
+                      ),
+                      _buildGridItem(
+                        context,
+                        "Audios",
+                        Icons.audiotrack,
+                        totalStorage,
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => AudiosPage()),
+                        ),
+                      ),
                     ],
                   );
                 },
@@ -661,7 +671,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -674,7 +684,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                 children: [
                   Text(
                     '${(totalStorage / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB',
-                    style: TextStyle(color: Colors.grey),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),

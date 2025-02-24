@@ -4,6 +4,8 @@ import 'storage_service.dart';
 class StoragePieChartWidget extends StatelessWidget {
   final StorageService storageService = StorageService();
 
+  StoragePieChartWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
@@ -57,7 +59,7 @@ class StoragePieChartWidget extends StatelessWidget {
           );
         }
     
-        return Text("No data available");
+        return const Text("No data available");
       },
     );
   }

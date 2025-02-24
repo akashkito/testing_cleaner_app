@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 
 class PremiumScreen extends StatelessWidget {
-  const PremiumScreen({Key? key}) : super(key: key);
+  const PremiumScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Premium Page")),
-      body: Center(child: Text('Premium Screen')),
+      appBar: AppBar(title: const Text("Premium Page")),
+      body: const Center(child: Text('Premium Screen')),
     );
   }
 }

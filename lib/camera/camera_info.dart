@@ -55,9 +55,9 @@ class CameraInfo {
     // Show Front Cameras
     if (frontCameras.isNotEmpty) {
       cameraInfo += 'Front Cameras:\n';
-      frontCameras.forEach((camera) {
+      for (var camera in frontCameras) {
         cameraInfo += 'Camera ID: ${camera['cameraId']}\nResolution: ${camera['resolution']}\n\n';
-      });
+      }
     } else {
       cameraInfo += 'No Front Camera Available\n';
     }
@@ -65,9 +65,9 @@ class CameraInfo {
     // Show Rear Cameras
     if (rearCameras.isNotEmpty) {
       cameraInfo += 'Rear Cameras:\n';
-      rearCameras.forEach((camera) {
+      for (var camera in rearCameras) {
         cameraInfo += 'Camera ID: ${camera['cameraId']}\nResolution: ${camera['resolution']}\n\n';
-      });
+      }
     } else {
       cameraInfo += 'No Rear Camera Available\n';
     }

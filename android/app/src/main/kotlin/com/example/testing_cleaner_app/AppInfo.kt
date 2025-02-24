@@ -2,6 +2,7 @@ package com.example.testing_cleaner_app
 
 import android.Manifest
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
@@ -20,6 +21,7 @@ import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import android.net.Uri
 
 const val REQUEST_CODE = 1001  // Define the request code for permission
 
@@ -75,11 +77,11 @@ object AppInfo {
         val appsList = mutableListOf<Map<String, Any>>()
         val packageManager = context.packageManager
 
-        // Get all installed packages, including system and hidden apps
         val installedPackages = packageManager.getInstalledPackages(
             PackageManager.GET_META_DATA or
             PackageManager.GET_DISABLED_COMPONENTS or
-            PackageManager.GET_SHARED_LIBRARY_FILES
+            PackageManager.GET_SHARED_LIBRARY_FILES or
+            PackageManager.GET_UNINSTALLED_PACKAGES
         )
 
         for (packageInfo in installedPackages) {
@@ -92,7 +94,6 @@ object AppInfo {
                 packageInfo.versionCode.toString()
             }
 
-            // Safely access the sourceDir and handle nullable applicationInfo
             val appSourceDir = packageInfo.applicationInfo?.sourceDir ?: ""
             val appSize = getAppSize(appSourceDir)
             val dataSize = getDataSize(packageName)
@@ -107,7 +108,6 @@ object AppInfo {
             val isSystemApp = packageInfo.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) != 0
             val isDisabled = packageManager.getApplicationEnabledSetting(packageInfo.packageName) == PackageManager.COMPONENT_ENABLED_STATE_DISABLED
 
-            // Add app data to the list
             appsList.add(
                 mapOf(
                     "appName" to appName,
@@ -131,6 +131,25 @@ object AppInfo {
         return appsList
     }
 
+    // Force Stop an app
+    fun forceStopApp(context: Context, packageName: String) {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        try {
+            activityManager.killBackgroundProcesses(packageName)
+            println("App $packageName force stopped successfully.")
+        } catch (e: Exception) {
+            println("Failed to force stop app $packageName: ${e.message}")
+        }
+    }
+
+    // Uninstall an app
+    fun uninstallApp(context: Context, packageName: String) {
+        val uninstallIntent = Intent(Intent.ACTION_UNINSTALL_PACKAGE)
+        uninstallIntent.data = Uri.parse("package:$packageName")
+        uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true)
+        context.startActivity(uninstallIntent)
+    }
+
     // Get the app size (APK size)
     private fun getAppSize(appSourceDir: String): Long {
         val appFile = File(appSourceDir)
@@ -147,13 +166,11 @@ object AppInfo {
     private fun getCacheSize(context: Context, packageName: String): Long {
         var cacheSize: Long = 0
 
-        // Check internal cache directory
         val internalCacheDir = File(context.cacheDir, packageName)
         if (internalCacheDir.exists()) {
             cacheSize += getFolderSize(internalCacheDir)
         }
 
-        // Check external cache directory
         val externalCacheDir = File(context.getExternalCacheDir(), packageName)
         if (externalCacheDir.exists()) {
             cacheSize += getFolderSize(externalCacheDir)
@@ -203,8 +220,8 @@ object AppInfo {
 
         // Query usage stats for the past 7 days
         val appStats = usm.queryUsageStats(
-            UsageStatsManager.INTERVAL_WEEKLY,  // Fetch data for the past week
-            time - TimeUnit.DAYS.toMillis(7),   // 7 days ago
+            UsageStatsManager.INTERVAL_WEEKLY,  
+            time - TimeUnit.DAYS.toMillis(7),   
             time
         )
 

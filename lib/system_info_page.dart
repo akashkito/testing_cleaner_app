@@ -7,6 +7,8 @@ import 'battery/battery_page.dart';
 import 'processor/processor_info.dart';
 
 class SystemInfoPage extends StatefulWidget {
+  const SystemInfoPage({super.key});
+
   @override
   _SystemInfoPageState createState() => _SystemInfoPageState();
 }
@@ -115,19 +117,19 @@ class _SystemInfoPageState extends State<SystemInfoPage> {
                 'WiFi Info',
                 isWifiFetched
                     ? _buildWifiInfo()
-                    : Text('Fetching Wi-Fi Info...'),
+                    : const Text('Fetching Wi-Fi Info...'),
                 0),
             _buildDropdown(
                 'Camera Info',
                 isCameraFetched
                     ? Text(cameraInfo)
-                    : Text('Fetching Camera Info...'),
+                    : const Text('Fetching Camera Info...'),
                 1),
             _buildDropdown(
                 'Display Info',
                 isDisplayFetched
                     ? _buildDisplayInfo()
-                    : Text('Fetching Display Info...'),
+                    : const Text('Fetching Display Info...'),
                 2),
             _buildDropdown('Memory Info', _buildMemoryInfo(), 3),
             _buildDropdown('Processor Info', _buildProcessorInfo(), 4),
@@ -189,17 +191,17 @@ class _SystemInfoPageState extends State<SystemInfoPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        RowWidget('Total RAM', '${totalRAM} GB'),
-        RowWidget('Available RAM', '${availableRAM} GB'),
-        RowWidget('Used RAM:', '${usedRAM} GB'),
-        RowWidget('RAM Percentage', '${ramPercentage}%'),
-        SizedBox(
+        RowWidget('Total RAM', '$totalRAM GB'),
+        RowWidget('Available RAM', '$availableRAM GB'),
+        RowWidget('Used RAM:', '$usedRAM GB'),
+        RowWidget('RAM Percentage', '$ramPercentage%'),
+        const SizedBox(
           height: 20,
         ),
-        RowWidget('Total ROM', '${totalROM} GB'),
-        RowWidget('Available ROM', '${availableROM} GB'),
-        RowWidget('Used ROM:', '${usedROM} GB'),
-        RowWidget('ROM Percentage', '${romPercentage}%'),
+        RowWidget('Total ROM', '$totalROM GB'),
+        RowWidget('Available ROM', '$availableROM GB'),
+        RowWidget('Used ROM:', '$usedROM GB'),
+        RowWidget('ROM Percentage', '$romPercentage%'),
       ],
     );
   }

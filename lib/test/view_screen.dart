@@ -126,7 +126,7 @@ class _ViewPageState extends State<ViewPage> {
 
   String _batteryLevel = 'Unknown battery level.';
   bool _isLoading = false;
-  String _storageInfo = "";
+  final String _storageInfo = "";
   String _junkFiles = 'Fetching junk files...';
 
   List<Map<String, dynamic>> _installedApps = [];
@@ -399,7 +399,7 @@ class _ViewPageState extends State<ViewPage> {
                             MaterialPageRoute(
                                 builder: (context) => StorageInfoWidget()));
                       },
-                      child: Text('Get Storage Info')),
+                      child: const Text('Get Storage Info')),
                 ],
               ),
             ),
