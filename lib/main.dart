@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:testing_cleaner_app/test/home_screen2.dart';
 import 'package:testing_cleaner_app/test/homemainscreen.dart';
-import 'test/view_screen.dart';
 
 void main() {
   runApp(const MyApp());

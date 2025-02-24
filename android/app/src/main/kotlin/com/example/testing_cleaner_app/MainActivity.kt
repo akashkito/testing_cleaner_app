@@ -16,7 +16,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.embedding.engine.FlutterEngine
 import android.os.Environment
 import android.widget.Toast
-
+import com.example.your_app_name.FileAccessPhone
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.testing_cleaner_app"
@@ -50,6 +50,8 @@ class MainActivity : FlutterActivity() {
                     "checkStoragePermission" -> handleCheckStoragePermission(result)
                     "requestStoragePermission" -> handleRequestStoragePermission(result)
                     "getPhotoFiles" -> handleGetPhotoFiles(result)
+                    "getVideoFiles" -> handleGetVideoFiles(result)
+                    "getAudioFiles" -> handleGetAudioFiles(result)
                     "getBatteryLevel" -> handleGetBatteryLevel(result)
                     "getBatteryStatus" -> handleGetBatteryStatus(result)
                     "getStorageInfo" -> handleGetStorageInfo(result)
@@ -75,15 +77,55 @@ class MainActivity : FlutterActivity() {
                         openAllFilesAccessSettings() // Open storage access settings for Android 11+
                         result.success(null)
                     }
-                    "deletePhoto" -> {
-                    val photoPath = call.argument<String>("path")
-                    if (photoPath != null) {
-                        val deleted = MediaInfo.deletePhoto(this, photoPath)
-                        result.success(deleted)
+                     "getFilesInDirectory" -> {
+                    val directoryPath = call.argument<String>("directoryPath")
+                    if (directoryPath != null) {
+                        val files = FileAccessPhone.getFilesInDirectory(this, directoryPath)
+                        result.success(files)
                     } else {
-                        result.success(false)
+                        result.error("INVALID_ARGUMENT", "Directory path is null", null)
                     }
                 }
+                "getSpecialFolders" -> {
+                    val specialFolders = FileAccessPhone.getSpecialFolders(this)
+                    result.success(specialFolders)
+                }
+                    "checkStoragePermission" -> {
+                        val isPermissionGranted = FileAccessPhone.isPermissionGranted(applicationContext)
+                        result.success(isPermissionGranted)
+                    }
+                    "requestStoragePermission" -> {
+                        FileAccessPhone.requestPermission(applicationContext, result)
+                    }
+                    "deletePhoto" -> {
+                        val photoPath = call.argument<String>("path")
+                        if (photoPath != null) {
+                            val deleted = MediaInfo.deletePhoto(this, photoPath)
+                            result.success(deleted)
+                    }   else {
+                        result.success(false)
+                        }
+                    }
+                    "deleteVideo" -> {
+                        val videoPath = call.argument<String>("path")
+                        if (videoPath != null) {
+                            val deleted = MediaInfo.deleteVideo(this, videoPath)
+                            result.success(deleted)
+                        } else {
+                            result.success(false)
+                        }
+                    }
+                    "deleteAudio" -> {
+                        val audioPath = call.argument<String>("path")
+                        if (audioPath != null) {
+                            val deleted = MediaInfo.deleteAudio(this, audioPath)
+                            result.success(deleted)
+                        } else {
+                            result.success(false)
+                        }
+                    }
+                    
+
                     else -> result.notImplemented()
                 }
             }
@@ -195,6 +237,39 @@ class MainActivity : FlutterActivity() {
             result.success(files)
         }
     }
+
+    // Get video files from the device
+private fun handleGetVideoFiles(result: MethodChannel.Result) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val isGranted = Environment.isExternalStorageManager()
+        if (isGranted) {
+            val files = MediaInfo.getVideoFiles(this)
+            result.success(files)
+        } else {
+            result.error("PERMISSION_DENIED", "Permission not granted for accessing all files", null)
+        }
+    } else {
+        val files = MediaInfo.getVideoFiles(this)
+        result.success(files)
+    }
+}
+
+    // Get video files from the device
+private fun handleGetAudioFiles(result: MethodChannel.Result) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val isGranted = Environment.isExternalStorageManager()
+        if (isGranted) {
+            val files = MediaInfo.getAudioFiles(this)
+            result.success(files)
+        } else {
+            result.error("PERMISSION_DENIED", "Permission not granted for accessing all files", null)
+        }
+    } else {
+        val files = MediaInfo.getAudioFiles(this)
+        result.success(files)
+    }
+}
+
 
     // Get battery level
     private fun handleGetBatteryLevel(result: MethodChannel.Result) {

@@ -7,7 +7,7 @@ class AppDetailsPage extends StatefulWidget {
   final List<Map<String, String>> apps; // Full list of apps
   final int selectedIndex; // The index of the selected app
 
-  AppDetailsPage({required this.apps, required this.selectedIndex});
+  const AppDetailsPage({super.key, required this.apps, required this.selectedIndex});
 
   @override
   _AppDetailsPageState createState() => _AppDetailsPageState();
@@ -64,7 +64,7 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
         height: 80, // Set the image height
       );
     } catch (e) {
-      return Icon(Icons.error);
+      return const Icon(Icons.error);
     }
   }
 
@@ -105,17 +105,17 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('App Details'),
+        title: const Text('App Details'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
               sortApps(value); // Sort apps when option is selected
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
+              const PopupMenuItem(
                   value: 'asc',
                   child: Text('Sort by Install Date (Ascending)')),
-              PopupMenuItem(
+              const PopupMenuItem(
                   value: 'desc',
                   child: Text('Sort by Install Date (Descending)')),
             ],
@@ -131,11 +131,11 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
               padding: const EdgeInsets.all(16.0),
               child: Container(
                 width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(color: Colors.black26, blurRadius: 4.0),
                   ],
                 ),
@@ -145,9 +145,9 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
                     Text(
                       app["appName"] ?? "Unknown App",
                       style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     // Display size in the appropriate unit
                     Text("Total Size: ${formatSize(app["appSize"] ?? '0')}"),
                     Text("Package Name: ${app["packageName"] ?? '0'}"),
@@ -163,7 +163,7 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
               ),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           // Carousel of all apps
@@ -201,7 +201,7 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
                     child: Column(
                       children: [
                         appIcon,
-                        Text(app["appName"] ?? "Unknown App", style: TextStyle(fontSize: 15)),
+                        Text(app["appName"] ?? "Unknown App", style: const TextStyle(fontSize: 15)),
                       ],
                     ),
                   ),

@@ -131,6 +131,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class SpeedScreen extends StatefulWidget {
+  const SpeedScreen({super.key});
+
   @override
   _SpeedScreenState createState() => _SpeedScreenState();
 }

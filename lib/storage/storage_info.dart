@@ -5,6 +5,8 @@ class StorageInfoWidget extends StatelessWidget {
 
   static const platform = MethodChannel('com.example.testing_cleaner_app');
 
+  const StorageInfoWidget({super.key});
+
   Future<Map<String, double>> _getStorageInfo() async {
     try {
       final Map<dynamic, dynamic> storage =
@@ -35,7 +37,7 @@ class StorageInfoWidget extends StatelessWidget {
         future: _getStorageInfo(), // Fetch storage info
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator(); // Show loading indicator
+            return const CircularProgressIndicator(); // Show loading indicator
           }
       
           if (snapshot.hasError) {
@@ -54,7 +56,7 @@ class StorageInfoWidget extends StatelessWidget {
             );
           }
       
-          return Text("No data available");
+          return const Text("No data available");
         },
       ),
     );
