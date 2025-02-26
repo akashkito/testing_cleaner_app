@@ -22,6 +22,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import android.net.Uri
+import android.util.Log
+
 
 const val REQUEST_CODE = 1001  // Define the request code for permission
 
@@ -72,7 +74,7 @@ object AppInfo {
         builder.create().show()
     }
 
-    // Get installed apps (including system apps)
+    // Get installed apps with expanded size checks
     fun getInstalledApps(context: Context): List<Map<String, Any>> {
         val appsList = mutableListOf<Map<String, Any>>()
         val packageManager = context.packageManager
@@ -94,12 +96,8 @@ object AppInfo {
                 packageInfo.versionCode.toString()
             }
 
+            // File path and size calculation
             val appSourceDir = packageInfo.applicationInfo?.sourceDir ?: ""
-            val appSize = getAppSize(appSourceDir)
-            val dataSize = getDataSize(packageName)
-            val cacheSize = getCacheSize(context, packageName)
-            val totalSize = appSize + dataSize + cacheSize
-
             val installDate = getInstallDate(packageInfo.firstInstallTime)
             val lastUpdateDate = getInstallDate(packageInfo.lastUpdateTime)
 
@@ -108,19 +106,33 @@ object AppInfo {
             val isSystemApp = packageInfo.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) != 0
             val isDisabled = packageManager.getApplicationEnabledSetting(packageInfo.packageName) == PackageManager.COMPONENT_ENABLED_STATE_DISABLED
 
+            // Fix for app size, data size, cache size with logging
+            val appSize = getAppSize(appSourceDir)
+            val dataSize = getDataSize(packageName, context)
+            val cacheSize = getCacheSize(context, packageName)
+
+            // Log sizes for debugging purposes
+            Log.d("AppInfo", "App: $appName, APK Size: $appSize, Data Size: $dataSize, Cache Size: $cacheSize")
+
+            // Total size: Sum of app size, data size, and cache size
+            val totalSize = appSize + dataSize + cacheSize
+
+            // Add each app info to the list
             appsList.add(
                 mapOf(
                     "appName" to appName,
                     "packageName" to packageName,
                     "versionName" to versionName,
                     "versionCode" to versionCode,
-                    "appSize" to appSize,
-                    "dataSize" to dataSize,
-                    "cacheSize" to cacheSize,
-                    "totalSize" to totalSize,
                     "installDate" to installDate,
                     "lastUpdateDate" to lastUpdateDate,
                     "appIcon" to appIconBase64,
+                    "storage" to mapOf(
+                        "app" to appSize,
+                        "data" to dataSize,
+                        "cache" to cacheSize,
+                        "totalAppSize" to totalSize
+                    ),
                     "uninstallIntent" to "package:$packageName",
                     "isSystemApp" to isSystemApp,
                     "isDisabled" to isDisabled
@@ -129,6 +141,67 @@ object AppInfo {
         }
 
         return appsList
+    }
+
+    // Helper method to get app size (APK size)
+    fun getAppSize(appSourceDir: String): Long {
+        val appFile = File(appSourceDir)
+        return if (appFile.exists()) appFile.length() else 0L
+    }
+
+    // Helper method to calculate data size
+    fun getDataSize(packageName: String, context: Context): Long {
+        val dataDir = File("/data/data/$packageName")
+        return if (dataDir.exists()) getFolderSize(dataDir) else 0L
+    }
+
+    fun getCacheSize(context: Context, packageName: String): Long {
+    try {
+        val cacheDir = File(context.cacheDir, packageName)
+        if (cacheDir.exists()) {
+            Log.d("Cache Access", "Cache directory exists: ${cacheDir.path}")
+            return getDirectorySize(cacheDir)
+        } else {
+            Log.d("Cache Access", "Cache directory does not exist: ${cacheDir.path}")
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    return 0
+}
+
+
+    // Helper method to calculate directory size (recursive)
+    fun getDirectorySize(file: File): Long {
+        var size = 0L
+        if (file.exists()) {
+            val files = file.listFiles()
+            if (files != null) {
+                for (f in files) {
+                    size += if (f.isDirectory) {
+                        getDirectorySize(f)
+                    } else {
+                        f.length()
+                    }
+                }
+            }
+        }
+        return size
+    }
+
+    // Helper method to calculate folder size (recursive)
+    fun getFolderSize(file: File): Long {
+        var size: Long = 0
+        file.listFiles()?.forEach {
+            size += if (it.isDirectory) getFolderSize(it) else it.length()
+        }
+        return size
+    }
+
+    // Get install date in readable format
+    fun getInstallDate(timeInMillis: Long): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        return sdf.format(Date(timeInMillis))
     }
 
     // Force Stop an app
@@ -150,51 +223,7 @@ object AppInfo {
         context.startActivity(uninstallIntent)
     }
 
-    // Get the app size (APK size)
-    private fun getAppSize(appSourceDir: String): Long {
-        val appFile = File(appSourceDir)
-        return if (appFile.exists()) appFile.length() else 0L
-    }
-
-    // Get data size associated with the app
-    private fun getDataSize(packageName: String): Long {
-        val dataDir = File(Environment.getDataDirectory(), "data/$packageName")
-        return if (dataDir.exists()) getFolderSize(dataDir) else 0L
-    }
-
-    // Get cache size associated with the app
-    private fun getCacheSize(context: Context, packageName: String): Long {
-        var cacheSize: Long = 0
-
-        val internalCacheDir = File(context.cacheDir, packageName)
-        if (internalCacheDir.exists()) {
-            cacheSize += getFolderSize(internalCacheDir)
-        }
-
-        val externalCacheDir = File(context.getExternalCacheDir(), packageName)
-        if (externalCacheDir.exists()) {
-            cacheSize += getFolderSize(externalCacheDir)
-        }
-
-        return cacheSize
-    }
-
-    // Calculate folder size (for cache and data)
-    private fun getFolderSize(file: File): Long {
-        var size: Long = 0
-        file.listFiles()?.forEach {
-            size += if (it.isDirectory) getFolderSize(it) else it.length()
-        }
-        return size
-    }
-
-    // Format install/update dates
-    private fun getInstallDate(timestamp: Long): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        return sdf.format(Date(timestamp))
-    }
-
-    // Get app icon in Base64
+    // Get app icon in Base64 format
     private fun getAppIcon(context: Context, appInfo: ApplicationInfo?): String {
         return try {
             val icon = appInfo?.loadIcon(context.packageManager)
@@ -220,8 +249,8 @@ object AppInfo {
 
         // Query usage stats for the past 7 days
         val appStats = usm.queryUsageStats(
-            UsageStatsManager.INTERVAL_WEEKLY,  
-            time - TimeUnit.DAYS.toMillis(7),   
+            UsageStatsManager.INTERVAL_WEEKLY,
+            time - TimeUnit.DAYS.toMillis(7),
             time
         )
 

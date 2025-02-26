@@ -4,7 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'dart:convert';
 
 class AppDetailsPage extends StatefulWidget {
-  final List<Map<String, String>> apps; // Full list of apps
+  final List<Map<String, dynamic>> apps; // Full list of apps
   final int selectedIndex; // The index of the selected app
 
   const AppDetailsPage({super.key, required this.apps, required this.selectedIndex});
@@ -14,7 +14,7 @@ class AppDetailsPage extends StatefulWidget {
 }
 
 class _AppDetailsPageState extends State<AppDetailsPage> {
-  late List<Map<String, String>> sortedApps;
+  late List<Map<String, dynamic>> sortedApps;
   int currentIndex = 0; // Store the current index of the selected app
   final CarouselSliderController _carouselController = CarouselSliderController();
 
@@ -153,7 +153,7 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
                     Text("Package Name: ${app["packageName"] ?? '0'}"),
                     Text("Version Name: ${app["versionName"] ?? '0'}"),
                     Text("Version Code: ${app["versionCode"] ?? '0'}"),
-                    Text("Data Size: ${formatSize(app["dataSize"] ?? '0')}"),
+                    Text("Data Size: ${formatSize(app["userDataSize"] ?? '0')}"),
                     Text("Cache Size: ${formatSize(app["cacheSize"] ?? '0')}"),
                     Text("Install Date: ${app["installDate"] ?? 'N/A'}"),
                     Text("Last Update: ${app["lastUpdateDate"] ?? 'N/A'}"),

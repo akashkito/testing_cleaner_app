@@ -243,21 +243,21 @@ class _HomeScreen2State extends State<HomeScreen2> {
                   Positioned(
                       top: 150,
                       left: 20,
-                      right: 20,
+                      right: 40,
                       child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.4),
-                                blurRadius: 10,
-                                offset: const Offset(0, 0),
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
+                          padding: const EdgeInsets.all(10),
+                          // decoration: BoxDecoration(
+                          //   color: Colors.white,
+                          //   borderRadius: BorderRadius.circular(20),
+                          //   boxShadow: [
+                          //     BoxShadow(
+                          //       color: Colors.grey.withOpacity(0.4),
+                          //       blurRadius: 10,
+                          //       offset: const Offset(0, 0),
+                          //       spreadRadius: 1,
+                          //     ),
+                          //   ],
+                          // ),
                           child: StoragePieChartWidget())),
 
                   //Button
@@ -295,7 +295,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                     FolderAccessPage(), // Replace with your next screen
+                                    FolderAccessPage(), // Replace with your next screen
                               ),
                             );
                           },
@@ -376,7 +376,6 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           );
                         },
                       ),
-
                       _buildGridItem(
                         context,
                         "Photos",

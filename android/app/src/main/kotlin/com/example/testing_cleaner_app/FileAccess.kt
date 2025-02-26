@@ -21,75 +21,54 @@ class FileAccessPhone {
     companion object {
 
         // Example of converting FileItem to a Map
-fun getFilesInDirectory(context: Context, directoryPath: String): List<Map<String, Any>> {
-    val filesList = mutableListOf<Map<String, Any>>()
-    val dir = File(directoryPath)
+        fun getFilesInDirectory(context: Context, directoryPath: String): List<Map<String, Any>> {
+            val filesList = mutableListOf<Map<String, Any>>()
+            val dir = File(directoryPath)
 
-    // Log to check the directory being accessed
-    println("Accessing directory: $directoryPath")
+            // Log to check the directory being accessed
+            println("Accessing directory: $directoryPath")
 
-    // List of file extensions we are interested in
-    val fileExtensions = listOf(".apk", ".jpg", ".jpeg", ".png", ".mp4", ".txt", ".pdf", ".mp3")
+            // List of file extensions we are interested in
+            val fileExtensions = listOf(".apk", ".jpg", ".jpeg", ".png", ".mp4", ".txt", ".pdf", ".mp3", ".tmp")
 
-    if (dir.exists() && dir.isDirectory) {
-        // Recursively search for files in this directory and its subdirectories
-        searchFiles(dir, filesList, fileExtensions)
-    } else {
-        println("Directory does not exist or is not a directory: $directoryPath")
-    }
+            if (dir.exists() && dir.isDirectory) {
+                // Recursively search for files in this directory and its subdirectories
+                searchFiles(dir, filesList, fileExtensions)
+            } else {
+                println("Directory does not exist or is not a directory: $directoryPath")
+            }
 
-    println("Files found: ${filesList.size}")  // Log the number of files found
-    return filesList
-}
+            println("Files found: ${filesList.size}")  // Log the number of files found
+            return filesList
+        }
 
-
-private fun searchFiles(dir: File, filesList: MutableList<Map<String, Any>>, extensions: List<String>) {
-    val files = dir.listFiles()
-    files?.forEach { file ->
-        if (file.isDirectory) {
-            searchFiles(file, filesList, extensions)
-        } else {
-            if (extensions.any { file.name.endsWith(it, ignoreCase = true) }) {
-                // Create a Map from the FileItem
-                val fileItemMap = mapOf(
-                    "name" to file.name,
-                    "size" to file.length(),
-                    "icon" to getIconForFile(file), // Replace with your actual logic for getting an icon
-                    "path" to file.absolutePath
-                )
-                filesList.add(fileItemMap)
+        private fun searchFiles(dir: File, filesList: MutableList<Map<String, Any>>, extensions: List<String>) {
+            val files = dir.listFiles()
+            files?.forEach { file ->
+                if (file.isDirectory) {
+                    searchFiles(file, filesList, extensions)
+                } else {
+                    if (extensions.any { file.name.endsWith(it, ignoreCase = true) }) {
+                        // Create a Map from the FileItem
+                        val fileItemMap = mapOf(
+                            "name" to file.name,
+                            "size" to file.length(),
+                            "icon" to getIconForFile(file), // Replace with your actual logic for getting an icon
+                            "path" to file.absolutePath
+                        )
+                        filesList.add(fileItemMap)
+                    }
+                }
             }
         }
-    }
-}
 
-// Example method to get an icon for a file (you may need to implement this logic)
-private fun getIconForFile(file: File): String {
-    return when {
-        file.name.endsWith(".mp4", ignoreCase = true) -> "video_icon"
-        file.name.endsWith(".mp3", ignoreCase = true) -> "audio_icon"
-        file.name.endsWith(".jpg", ignoreCase = true) || file.name.endsWith(".jpeg", ignoreCase = true) -> "image_icon"
-        else -> "default_icon"
-    }
-}
-
-
-        // Helper function to get file icon based on its type
-        private fun getFileIcon(file: File, context: Context): String {
-            // Get file extension
-            val extension = file.extension.lowercase()
-
-            // Define the icon based on the file extension
-            return when (extension) {
-                "apk" -> "apk_icon"  // Example: Replace with actual APK icon resource
-                "jpg", "jpeg", "png" -> "image_icon"  // Example: Replace with image file icon resource
-                "mp4" -> "video_icon"  // Example: Replace with video file icon resource
-                "pdf" -> "pdf_icon"  // Example: Replace with PDF file icon resource
-                "txt" -> "text_icon"  // Example: Replace with text file icon resource
-                "mp3" -> "audio_icon"  // Example: Replace with audio file icon resource
-                "doc" -> "word_icon"  // Example: Replace with Word file icon resource
-                "exe" -> "exe_icon"  // Example: Replace with EXE file icon resource
-                else -> "default_icon"  // Default icon for unknown file types
+        // Example method to get an icon for a file (you may need to implement this logic)
+        private fun getIconForFile(file: File): String {
+            return when {
+                file.name.endsWith(".mp4", ignoreCase = true) -> "video_icon"
+                file.name.endsWith(".mp3", ignoreCase = true) -> "audio_icon"
+                file.name.endsWith(".jpg", ignoreCase = true) || file.name.endsWith(".jpeg", ignoreCase = true) -> "image_icon"
+                else -> "default_icon"
             }
         }
 
@@ -107,6 +86,10 @@ private fun getIconForFile(file: File): String {
             specialFolders.add("/storage/emulated/0/")  // General storage for large files
             specialFolders.add("/storage/emulated/0/")  // Empty folders
 
+            // Add any residual or junk folders (can vary based on device or app structure)
+            specialFolders.add("/data/data/com.example.your_app_name/.residual")
+            specialFolders.add("/storage/emulated/0/.junk")
+            
             return specialFolders
         }
 
@@ -148,12 +131,36 @@ private fun getIconForFile(file: File): String {
             if (rootDir.exists() && rootDir.isDirectory) {
                 val files = rootDir.listFiles { file -> file.isFile }
                 files?.forEach { file ->
-                    if (file.length() > sizeLimit)  {
+                    if (file.length() > sizeLimit) {
                         largeFiles.add(file.absolutePath)
                     }
                 }
             }
             return largeFiles
+        }
+
+        // Method to get files that are larger than a given size (e.g., 50MB)
+        fun getLargeFilesAboveSize(context: Context, sizeLimit: Long): List<Map<String, Any>> {
+            val largeFilesList = mutableListOf<Map<String, Any>>()
+
+            // Check each special folder for large files
+            val specialFolders = getSpecialFolders(context)
+            specialFolders.forEach { folderPath ->
+                val largeFiles = findLargeFiles(folderPath, sizeLimit)
+                largeFiles.forEach { filePath ->
+                    val file = File(filePath)
+                    largeFilesList.add(
+                        mapOf(
+                            "name" to file.name,
+                            "size" to file.length(),
+                            "icon" to getIconForFile(file),
+                            "path" to file.absolutePath
+                        )
+                    )
+                }
+            }
+
+            return largeFilesList
         }
     }
 }

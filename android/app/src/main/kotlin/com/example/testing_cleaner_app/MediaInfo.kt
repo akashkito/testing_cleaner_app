@@ -18,6 +18,14 @@ import android.provider.MediaStore.Video.Thumbnails
 import androidx.annotation.RequiresApi
 import android.graphics.BitmapFactory
 import java.io.FileOutputStream
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import android.widget.ImageView
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 
 
 object MediaInfo {
@@ -88,6 +96,49 @@ object MediaInfo {
             }
         }
         return files
+    }
+
+    // Scale the image to a smaller size for efficient memory usage
+    // Use BitmapFactory Options to downscale large images
+fun loadImageScaled(activity: Activity, uri: Uri): Bitmap? {
+    val resolver: ContentResolver = activity.contentResolver
+    val options = BitmapFactory.Options().apply {
+        inJustDecodeBounds = true
+    }
+
+    resolver.openInputStream(uri)?.use { inputStream ->
+        BitmapFactory.decodeStream(inputStream, null, options)
+    }
+
+    Log.d("MediaInfo", "Video URI: $uri")
+
+    // Scale the image efficiently based on required size
+    val scaleFactor = calculateInSampleSize(options, 100, 100) // Scale to 100x100 pixels
+    options.inJustDecodeBounds = false
+    options.inSampleSize = scaleFactor
+
+    resolver.openInputStream(uri)?.use { inputStream ->
+        return BitmapFactory.decodeStream(inputStream, null, options)
+    }
+
+    return null
+}
+
+    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        val height = options.outHeight
+        val width = options.outWidth
+        var inSampleSize = 1
+
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight = height / 2
+            val halfWidth = width / 2
+
+            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+
+        return inSampleSize
     }
 
     fun deletePhoto(activity: Activity, photoPath: String) {
@@ -170,42 +221,41 @@ object MediaInfo {
     }
 
     fun deleteAudio(activity: Activity, audioPath: String) {
-    try {
-        // Get the URI for the audio using MediaStore
-        val resolver: ContentResolver = activity.contentResolver
-        val uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        try {
+            // Get the URI for the audio using MediaStore
+            val resolver: ContentResolver = activity.contentResolver
+            val uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
 
-        // Query to find the audio's ID using the file path
-        val selection = MediaStore.Audio.Media.DATA + " = ?"
-        val selectionArgs = arrayOf(audioPath)
-        val cursor = resolver.query(uri, null, selection, selectionArgs, null)
+            // Query to find the audio's ID using the file path
+            val selection = MediaStore.Audio.Media.DATA + " = ?"
+            val selectionArgs = arrayOf(audioPath)
+            val cursor = resolver.query(uri, null, selection, selectionArgs, null)
 
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val audioId = it.getLong(idColumnIndex)
-                val audioUri = ContentUris.withAppendedId(uri, audioId)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+                    val audioId = it.getLong(idColumnIndex)
+                    val audioUri = ContentUris.withAppendedId(uri, audioId)
 
-                // Now delete the audio using the URI
-                val rowsDeleted = resolver.delete(audioUri, null, null)
-                if (rowsDeleted > 0) {
-                    Log.d("MediaInfo", "Audio deleted successfully.")
+                    // Now delete the audio using the URI
+                    val rowsDeleted = resolver.delete(audioUri, null, null)
+                    if (rowsDeleted > 0) {
+                        Log.d("MediaInfo", "Audio deleted successfully.")
+                    } else {
+                        Log.e("MediaInfo", "Failed to delete audio.")
+                    }
                 } else {
-                    Log.e("MediaInfo", "Failed to delete audio.")
+                    Log.e("MediaInfo", "Audio not found in MediaStore.")
                 }
-            } else {
-                Log.e("MediaInfo", "Audio not found in MediaStore.")
             }
+        } catch (e: Exception) {
+            Log.e("Error", "Error deleting audio: ${e.message}")
         }
-    } catch (e: Exception) {
-        Log.e("Error", "Error deleting audio: ${e.message}")
     }
-}
-
 
     // Fetch video files from MediaStore
-    @RequiresApi(Build.VERSION_CODES.Q) // Make sure this is required for Android Q and above
-    fun getVideoFiles(activity: Activity): List<Map<String, Any?>> {
+    @RequiresApi(Build.VERSION_CODES.Q)
+fun getVideoFiles(activity: Activity): List<Map<String, Any?>> {
     val files = mutableListOf<Map<String, Any?>>()
     val resolver: ContentResolver = activity.contentResolver
 
@@ -247,7 +297,12 @@ object MediaInfo {
             )
             val path = getFilePathFromUri(activity, videoUri)
 
-            val thumbnailPath = getVideoThumbnail(activity, videoUri) // Get the video thumbnail
+            // Load the thumbnail using Glide
+            val imageView = ImageView(activity)  // Assuming you have an ImageView to show the thumbnail
+            loadVideoThumbnailUsingGlide(activity, videoUri, imageView)
+
+            // Ensure thumbnail generation if needed and add to data
+            val thumbnailPath = getVideoThumbnail(activity, videoUri)
 
             if (path != null) {
                 val videoFile = mapOf<String, Any?>(
@@ -265,64 +320,106 @@ object MediaInfo {
     return files
 }
 
-@RequiresApi(Build.VERSION_CODES.Q)
+
+    @RequiresApi(Build.VERSION_CODES.Q)
 fun getVideoThumbnail(activity: Activity, uri: Uri): String? {
     val resolver: ContentResolver = activity.contentResolver
     val videoId = ContentUris.parseId(uri)
-    val thumbnailBitmap: Bitmap? = MediaStore.Video.Thumbnails.getThumbnail(
-        resolver,
-        videoId,
-        MediaStore.Video.Thumbnails.MINI_KIND,
-        null
-    )
 
-    // Check if the Bitmap is not null and save it as a file
-    if (thumbnailBitmap != null) {
-        val tempFile = File(activity.cacheDir, "video_thumbnail_${System.currentTimeMillis()}.jpg")
-        val outputStream = FileOutputStream(tempFile)
-        thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
-        outputStream.flush()
-        outputStream.close()
-
-        return tempFile.absolutePath // Return the path of the generated thumbnail
+    // Check if the videoId is valid
+    if (videoId == -1L) {
+        Log.e("MediaInfo", "Invalid video ID")
+        return null
     }
+
+    try {
+        // Try to get the thumbnail bitmap
+        val thumbnailBitmap: Bitmap? = MediaStore.Video.Thumbnails.getThumbnail(
+            resolver,
+            videoId,
+            MediaStore.Video.Thumbnails.MINI_KIND,
+            null
+        )
+
+        // Check if the thumbnail was generated successfully
+        if (thumbnailBitmap != null) {
+            val tempFile = File(activity.cacheDir, "video_thumbnail_${System.currentTimeMillis()}.jpg")
+            val outputStream = FileOutputStream(tempFile)
+            thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            return tempFile.absolutePath // Return the path of the generated thumbnail
+        } else {
+            Log.e("MediaInfo", "Thumbnail is null.")
+        }
+    } catch (e: Exception) {
+        Log.e("Error", "Error generating thumbnail: ${e.message}")
+    }
+
     return null
 }
 
 
-fun deleteVideo(activity: Activity, videoPath: String) {
-    try {
-        // Get the URI for the video using MediaStore
-        val resolver: ContentResolver = activity.contentResolver
-        val uri = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-
-        // Query to find the video's ID using the file path
-        val selection = MediaStore.Video.Media.DATA + " = ?"
-        val selectionArgs = arrayOf(videoPath)
-        val cursor = resolver.query(uri, null, selection, selectionArgs, null)
-
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
-                val videoId = it.getLong(idColumnIndex)
-                val videoUri = ContentUris.withAppendedId(uri, videoId)
-
-                // Now delete the video using the URI
-                val rowsDeleted = resolver.delete(videoUri, null, null)
-                if (rowsDeleted > 0) {
-                    Log.d("MediaInfo", "Video deleted successfully.")
-                } else {
-                    Log.e("MediaInfo", "Failed to delete video.")
-                }
-            } else {
-                Log.e("MediaInfo", "Video not found in MediaStore.")
-            }
-        }
-    } catch (e: Exception) {
-        Log.e("Error", "Error deleting video: ${e.message}")
-    }
+   fun loadVideoThumbnail(activity: Activity, uri: Uri, imageView: ImageView) {
+    Glide.with(activity)
+        .load(uri)
+        .apply(RequestOptions().override(100, 100))  // Resize the thumbnail to 100x100 pixels for memory efficiency
+        .diskCacheStrategy(DiskCacheStrategy.ALL)  // Cache the thumbnail
+        .into(imageView)
 }
 
+fun loadVideoThumbnailUsingGlide(activity: Activity, uri: Uri, imageView: ImageView) {
+    Glide.with(activity)
+        .load(uri) // Glide will automatically handle video thumbnail generation
+        .apply(RequestOptions().override(100, 100)) // Resize the thumbnail to 100x100
+        .diskCacheStrategy(DiskCacheStrategy.ALL) // Cache images
+        .into(imageView)
+}
+
+    // Fetch video files asynchronously
+    fun fetchVideoFilesAsync(activity: Activity) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val files = getVideoFiles(activity)  // Your video fetching function
+            withContext(Dispatchers.Main) {
+                // Update UI with video data here
+            }
+        }
+    }
+
+    // Delete video method
+    fun deleteVideo(activity: Activity, videoPath: String) {
+        try {
+            // Get the URI for the video using MediaStore
+            val resolver: ContentResolver = activity.contentResolver
+            val uri = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+
+            // Query to find the video's ID using the file path
+            val selection = MediaStore.Video.Media.DATA + " = ?"
+            val selectionArgs = arrayOf(videoPath)
+            val cursor = resolver.query(uri, null, selection, selectionArgs, null)
+
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+                    val videoId = it.getLong(idColumnIndex)
+                    val videoUri = ContentUris.withAppendedId(uri, videoId)
+
+                    // Now delete the video using the URI
+                    val rowsDeleted = resolver.delete(videoUri, null, null)
+                    if (rowsDeleted > 0) {
+                        Log.d("MediaInfo", "Video deleted successfully.")
+                    } else {
+                        Log.e("MediaInfo", "Failed to delete video.")
+                    }
+                } else {
+                    Log.e("MediaInfo", "Video not found in MediaStore.")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Error", "Error deleting video: ${e.message}")
+        }
+    }
 
     // Get file path from URI (works for images, videos, and audios)
     fun getFilePathFromUri(activity: Activity, uri: Uri): String? {
@@ -341,8 +438,6 @@ fun deleteVideo(activity: Activity, videoPath: String) {
         return null
     }
 
-
-
     // Check if permission is granted
     fun isPermissionGranted(activity: Activity): Boolean {
         return ContextCompat.checkSelfPermission(activity, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
@@ -354,12 +449,11 @@ fun deleteVideo(activity: Activity, videoPath: String) {
     }
 
     // Handle the result of permission request
-    fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray): Boolean {
+    fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray) {
         if (requestCode == 1 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            return true // Permission granted
+            Log.d("Permissions", "Permission granted.")
         } else {
-            Log.e("Permission", "Storage permission denied")
-            return false // Permission denied
+            Log.d("Permissions", "Permission denied.")
         }
     }
 }

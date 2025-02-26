@@ -97,6 +97,8 @@ android {
         implementation 'com.google.android.material:material:1.7.0'  // Latest stable version
         implementation 'com.google.android.exoplayer:exoplayer-core:2.15.0'
         // Add any other necessary dependencies (like FileUtils for cleaning)
+        implementation 'com.github.bumptech.glide:glide:4.15.1'  // Add Glide dependency
+        annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'  // Add Glide compiler
     }
 }
 

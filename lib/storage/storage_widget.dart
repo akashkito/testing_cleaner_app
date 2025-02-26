@@ -14,51 +14,63 @@ class StoragePieChartWidget extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const CircularProgressIndicator(); // Show loading indicator
         }
-    
+
         if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
         }
-    
+
         if (snapshot.hasData) {
           final storageData = snapshot.data!;
-    
+
           // Prepare data for display
           double totalStorage = storageData['total']!;
           double availableStorage = storageData['available']!;
           double usedStorage = storageData['used']!;
-          double remainingStorage = totalStorage - availableStorage - usedStorage;
-    
-          // Calculate percentages
-          double totalStoragrPercentage = (totalStorage / totalStorage) * 100;
-          double availablePercentage = (availableStorage / totalStorage) * 100;
-          double usedPercentage = (usedStorage / totalStorage) * 100;
-          double remainingPercentage = (remainingStorage / totalStorage) * 100;
-    
+          // double remainingStorage = totalStorage - availableStorage - usedStorage;
+
+          // // // Calculate percentages
+          // double totalStoragrPercentage = (totalStorage / totalStorage) * 100;
+          // double availablePercentage = (availableStorage / totalStorage) * 100;
+          // double usedPercentage = (usedStorage / totalStorage) * 100;
+          // double remainingPercentage = (remainingStorage / totalStorage) * 100;
+
           // Display the storage data as text
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Column(
-                children: [Text("Total Storage: ${totalStorage.toStringAsFixed(2)} GB"),
-              Text("Available: ${availableStorage.toStringAsFixed(2)} GB"),
-              Text("Used : ${usedStorage.toStringAsFixed(2)} GB"),
-              Text("Remaining : ${remainingStorage.toStringAsFixed(2)} GB"),
-              ],
-              ) ,
-              // Display percentage data
-              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text("total S P: ${totalStoragrPercentage.toStringAsFixed(2)}%"),
-                  Text("Available S P: ${availablePercentage.toStringAsFixed(2)}%"),
-              Text("Used S P: ${usedPercentage.toStringAsFixed(2)}%"),
-              Text("Remaining S P: ${remainingPercentage.toStringAsFixed(2)}%"),
-            
+                  Text(
+                    "Total Storage: ${totalStorage.toStringAsFixed(2)} GB",
+                    style: TextStyle(fontSize: 17),
+                  ),
+                  Text(
+                    "Available: ${availableStorage.toStringAsFixed(2)} GB",
+                    style: TextStyle(fontSize: 17),
+                  ),
+                  Text(
+                    "Used : ${usedStorage.toStringAsFixed(2)} GB",
+                    style: TextStyle(fontSize: 17),
+                  ),
+                  // Text("Remaining : ${remainingStorage.toStringAsFixed(2)} GB"),
                 ],
-              )],
+              ),
+              // Display percentage data
+              // // Column(
+              // //   children: [
+              // //     Text("total S P: ${totalStoragrPercentage.toStringAsFixed(2)}%"),
+              // //     Text("Available S P: ${availablePercentage.toStringAsFixed(2)}%"),
+              // // Text("Used S P: ${usedPercentage.toStringAsFixed(2)}%"),
+              // // Text("Remaining S P: ${remainingPercentage.toStringAsFixed(2)}%"),
+
+              //   ],
+              // )
+            ],
           );
         }
-    
+
         return const Text("No data available");
       },
     );
