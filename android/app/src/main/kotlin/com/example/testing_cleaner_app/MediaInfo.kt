@@ -27,7 +27,6 @@ import kotlinx.coroutines.withContext
 import android.widget.ImageView
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 
-
 object MediaInfo {
 
     // Data class to store media details for photos, videos, and audios
@@ -176,49 +175,54 @@ fun loadImageScaled(activity: Activity, uri: Uri): Bitmap? {
 
     // Fetch audio files from MediaStore
     fun getAudioFiles(activity: Activity): List<Map<String, Any>> {
-        val files = mutableListOf<Map<String, Any>>()
-        val resolver: ContentResolver = activity.contentResolver
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.DISPLAY_NAME,
-            MediaStore.Audio.Media.SIZE,
-            MediaStore.Audio.Media.DATE_ADDED
-        )
-        val cursor = resolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            projection, null, null, null
-        )
+    val files = mutableListOf<Map<String, Any>>()
+    val resolver: ContentResolver = activity.contentResolver
+    val projection = arrayOf(
+        MediaStore.Audio.Media._ID,
+        MediaStore.Audio.Media.DISPLAY_NAME,
+        MediaStore.Audio.Media.SIZE,
+        MediaStore.Audio.Media.DATE_ADDED,
+        MediaStore.Audio.Media.DURATION // Add the DURATION column here
+    )
+    val cursor = resolver.query(
+        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+        projection, null, null, null
+    )
 
-        cursor?.use {
-            val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-            val nameColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
-            val sizeColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
-            val dateColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
+    cursor?.use {
+        val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+        val nameColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
+        val sizeColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+        val dateColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
+        val durationColumnIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION) // Get the duration column index
 
-            while (it.moveToNext()) {
-                val id = it.getLong(idColumnIndex)
-                val name = it.getString(nameColumnIndex)
-                val size = it.getLong(sizeColumnIndex)
-                val date = it.getLong(dateColumnIndex)
+        while (it.moveToNext()) {
+            val id = it.getLong(idColumnIndex)
+            val name = it.getString(nameColumnIndex)
+            val size = it.getLong(sizeColumnIndex)
+            val date = it.getLong(dateColumnIndex)
+            val duration = it.getLong(durationColumnIndex) // Get the duration value
 
-                val audioUri: Uri = ContentUris.withAppendedId(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id
+            val audioUri: Uri = ContentUris.withAppendedId(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id
+            )
+            val path = getFilePathFromUri(activity, audioUri)
+
+            if (path != null) {
+                val audioFile = mapOf(
+                    "path" to path,
+                    "name" to name,
+                    "size" to size,
+                    "date" to date,
+                    "duration" to duration // Add duration to the map
                 )
-                val path = getFilePathFromUri(activity, audioUri)
-
-                if (path != null) {
-                    val audioFile = mapOf(
-                        "path" to path,
-                        "name" to name,
-                        "size" to size,
-                        "date" to date
-                    )
-                    files.add(audioFile)
-                }
+                files.add(audioFile)
             }
         }
-        return files
     }
+    return files
+}
+
 
     fun deleteAudio(activity: Activity, audioPath: String) {
         try {
@@ -364,7 +368,7 @@ fun getVideoThumbnail(activity: Activity, uri: Uri): String? {
    fun loadVideoThumbnail(activity: Activity, uri: Uri, imageView: ImageView) {
     Glide.with(activity)
         .load(uri)
-        .apply(RequestOptions().override(100, 100))  // Resize the thumbnail to 100x100 pixels for memory efficiency
+        .apply(RequestOptions().override(50, 50))  // Resize the thumbnail to 100x100 pixels for memory efficiency
         .diskCacheStrategy(DiskCacheStrategy.ALL)  // Cache the thumbnail
         .into(imageView)
 }

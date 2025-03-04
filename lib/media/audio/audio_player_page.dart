@@ -1,101 +1,308 @@
-// import 'package:audioplayers/audioplayers.dart';
-// import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:just_audio/just_audio.dart' as just_audio;
+import 'package:shimmer/shimmer.dart';
+import 'package:testing_cleaner_app/utility/audio_util.dart';
 
-// class AudioPlayerPage extends StatefulWidget {
-//   final String audioPath;
+class CarouselAudioPlayerPage extends StatefulWidget {
+  final List<AudioTrack> audioList;
+  final int initialIndex;
 
-//   const AudioPlayerPage({super.key, required this.audioPath});
+  const CarouselAudioPlayerPage({
+    super.key,
+    required this.audioList,
+    required this.initialIndex,
+  });
 
-//   @override
-//   _AudioPlayerPageState createState() => _AudioPlayerPageState();
-// }
+  @override
+  _CarouselAudioPlayerPageState createState() =>
+      _CarouselAudioPlayerPageState();
+}
 
-// class _AudioPlayerPageState extends State<AudioPlayerPage> {
-//   late AudioPlayer _audioPlayer;
-//   bool _isPlaying = false;
-//   Duration _duration = Duration.zero;
-//   Duration _position = Duration.zero;
+class _CarouselAudioPlayerPageState extends State<CarouselAudioPlayerPage> {
+  late just_audio.AudioPlayer _audioPlayer;
+  late AudioTrack _currentTrack;
+  bool _isPlaying = false;
+  bool _isLoading = false;
+  double _currentPosition = 0.0;
+  late Duration _duration;
+  late Duration _position;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _audioPlayer = AudioPlayer();
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = just_audio.AudioPlayer();
+    _currentTrack = widget.audioList[widget.initialIndex];
+    _loadAudio();
+  }
 
-//     _audioPlayer.onDurationChanged.listen((duration) {
-//       setState(() {
-//         _duration = duration;
-//       });
-//     });
+  @override
+  void dispose() {
+    super.dispose();
+    _audioPlayer.dispose();
+  }
 
-//     _audioPlayer.onPositionChanged.listen((position) {
-//       setState(() {
-//         _position = position;
-//       });
-//     });
+  Future<void> _loadAudio() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      // Start playing the audio
+      await _audioPlayer.setUrl(_currentTrack.url);
+      _audioPlayer.durationStream.listen((duration) {
+        setState(() {
+          _duration = duration!;
+        });
+      });
 
-//     _audioPlayer.onPlayerStateChanged.listen((state) {
-//       setState(() {
-//         _isPlaying = state == PlayerState.playing;
-//       });
-//     });
+      _audioPlayer.positionStream.listen((position) {
+        setState(() {
+          _position = position;
+          _currentPosition = position.inSeconds.toDouble();
+        });
+      });
 
-//     _audioPlayer.setSourceUrl(widget.audioPath); // Load the local audio file
-//   }
+      // Once the audio is loaded, start it immediately
+      await _audioPlayer
+          .setAudioSource(AudioSource.uri(Uri.parse(_currentTrack.url)));
+      setState(() {
+        _isPlaying = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error loading audio: $e');
+    }
+  }
 
-//   @override
-//   void dispose() {
-//     super.dispose();
-//     _audioPlayer.dispose();
-//   }
+  void _togglePlayPause() {
+    if (_isPlaying) {
+      _audioPlayer.play();
+    } else {
+      _audioPlayer.pause();
+    }
 
-//   void _togglePlayPause() {
-//     if (_isPlaying) {
-//       _audioPlayer.pause();
-//     } else {
-//       _audioPlayer.resume();
-//     }
-//   }
+    setState(() {
+      _isPlaying = !_isPlaying;
+    });
+  }
 
-//   void _seekTo(Duration position) {
-//     _audioPlayer.seek(position);
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          _currentTrack.title,
+          style: const TextStyle(fontSize: 16),
+        ),
+      ),
+      body: _isLoading
+          ? SafeArea(
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        // Icon for the audio track (the audio icon can be a circular shape)
+                        Container(
+                          height: MediaQuery.of(context).size.width * 1,
+                          width: MediaQuery.of(context).size.width * 0.9,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('Audio Player'),
-//       ),
-//       body: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Text(
-//             'Playing: ${widget.audioPath.split('/').last}', // Display audio file name
-//             // style: Theme.of(context).textTheme.headline6,
-//           ),
-//           const SizedBox(height: 20),
-//           IconButton(
-//             icon: Icon(
-//               _isPlaying ? Icons.pause : Icons.play_arrow,
-//               size: 50,
-//             ),
-//             onPressed: _togglePlayPause,
-//           ),
-//           const SizedBox(height: 20),
-//           Slider(
-//             min: 0.0,
-//             max: _duration.inSeconds.toDouble(),
-//             value: _position.inSeconds.toDouble(),
-//             onChanged: (value) {
-//               _seekTo(Duration(seconds: value.toInt()));
-//             },
-//           ),
-//           Text(
-//             '${_position.inMinutes}:${(_position.inSeconds % 60).toString().padLeft(2, '0')} / ${_duration.inMinutes}:${(_duration.inSeconds % 60).toString().padLeft(2, '0')}',
-//             // style: Theme.of(context).textTheme.bodyText1,
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+                        // Audio track name
+                        Container(
+                          width: 150,
+                          height: 10,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 50),
+
+                        Container(
+                          width: 250,
+                          height: 4,
+                          color: Colors.white,
+                        ),
+
+                        const SizedBox(
+                          height: 20,
+                        ), // Play/Pause button (a circle button for play/pause)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Container(
+                              width: 55,
+                              height: 55,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Column(
+                // mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Container(
+                      height: MediaQuery.of(context).size.width * 1,
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 229, 239, 248),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(20)),
+                          border: Border.all(
+                              width: 0.5,
+                              color: const Color.fromARGB(255, 224, 224, 224))),
+                      child: const Icon(
+                        Icons.audiotrack,
+                        size: 100,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Text(
+                      _currentTrack.title,
+                      style: Theme.of(context).textTheme.labelLarge,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(FileUtils.formatDuration(_position)),
+                      Expanded(
+                        child: Slider(
+                          min: 0.0,
+                          max: _duration.inSeconds.toDouble(),
+                          value: _currentPosition,
+                          onChanged: (value) {
+                            setState(() {
+                              _currentPosition = value;
+                            });
+                            _audioPlayer.seek(Duration(seconds: value.toInt()));
+                          },
+                        ),
+                      ),
+                      Text(FileUtils.formatDuration(_duration)),
+                    ],
+                  ),
+                  const SizedBox(height: 0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.skip_previous,
+                          size: 30,
+                        ),
+                        onPressed: () {
+                          int prevIndex =
+                              widget.audioList.indexOf(_currentTrack) - 1;
+                          if (prevIndex >= 0) {
+                            setState(() {
+                              _currentTrack = widget.audioList[prevIndex];
+                            });
+                            _loadAudio();
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isPlaying
+                              ? Icons.play_circle_fill
+                              : Icons.pause_circle_filled,
+                          size: 60,
+                        ),
+                        onPressed: _togglePlayPause,
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.skip_next,
+                          size: 30,
+                        ),
+                        onPressed: () {
+                          int nextIndex =
+                              widget.audioList.indexOf(_currentTrack) + 1;
+                          if (nextIndex < widget.audioList.length) {
+                            setState(() {
+                              _currentTrack = widget.audioList[nextIndex];
+                            });
+                            _loadAudio();
+                          }
+                        },
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+class AudioTrack {
+  final String url;
+  final String title;
+  final String artist;
+  final String album;
+  final String duration;
+
+  AudioTrack({
+    required this.url,
+    required this.title,
+    required this.artist,
+    required this.album,
+    required this.duration,
+  });
+}

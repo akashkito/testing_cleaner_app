@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../utility/audio_util.dart';
 import 'view_image.dart';
 
 class PhotosPage extends StatefulWidget {
@@ -205,7 +207,8 @@ class _PhotosPageState extends State<PhotosPage> {
   String formatDate(int timestamp) {
     final DateTime date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
     final DateFormat formatter =
-        DateFormat('yyyy-MM-dd hh:mm a'); // 12-hour format
+        // DateFormat('yyyy-MM-dd hh:mm a'); // 12-hour format
+        DateFormat('dd-MM-yyyy'); // 12-hour format
     final DateTime now = DateTime.now();
     final Duration diff = now.difference(date);
 
@@ -214,7 +217,7 @@ class _PhotosPageState extends State<PhotosPage> {
     } else if (diff.inDays >= 2 && diff.inDays <= 7) {
       return DateFormat('EEEE').format(date); // Weekday name (Monday, etc.)
     } else {
-      return DateFormat('yyyy-MM-dd hh:mm a')
+      return DateFormat('dd-MM-yyyy')
           .format(date); // Full date and time
     }
   }
@@ -282,104 +285,295 @@ class _PhotosPageState extends State<PhotosPage> {
         0, (sum, photo) => sum + (photo['size'] as int? ?? 0));
   }
 
-  
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('Photos'),
-      actions: [
-        if (_selectedPhotos.isNotEmpty)
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _deleteSelectedPhotos,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () {
+            Navigator.pop(
+                context); // This pops the current screen and navigates back
+          },
+        ),
+        title: Text(
+          'Photos',
+          style: GoogleFonts.montserrat(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
-        IconButton(
-          icon: Icon(_selectAll ? Icons.select_all : Icons.select_all),
-          onPressed: _toggleSelectAll,
         ),
-        IconButton(
-          icon: Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward),
-          onPressed: _toggleSortOrder,
-        ),
-        IconButton(
-          icon: Icon(_isGridView
-              ? Icons.list
-              : Icons.grid_on), // Toggle between list/grid
-          onPressed: _toggleView,
-        ),
-      ],
-    ),
-    body: Builder(
-      builder: (context) {
-        if (!_isPermissionGranted) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                    'Storage permission is required to access photos.'),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _requestPermission, // Request permission
-                  child: const Text('Grant Permission'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        // Show a loader when photos are still being fetched
-        if (_photos.isEmpty && _isLoading) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        // If there are no photos and no loading state, show a placeholder
-        if (_photos.isEmpty && !_isLoading) {
-          return Center(
-            child: Text("No photos found."),
-          );
-        }
-
-        // Total size and count of images
-        final totalSize = _photos.fold(
-            0, (sum, photo) => sum + (photo['size'] as int? ?? 0));
-        final totalSizeFormatted = formatFileSize(totalSize);
-        final totalCount = _photos.length;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20.0),
-              child: Text(
-                '$totalCount Total ($totalSizeFormatted)',
-                style: Theme.of(context).textTheme.titleMedium,
+        actions: [
+          // if (_selectedPhotos.isNotEmpty)
+          //   IconButton(
+          //     icon: const Icon(Icons.delete),
+          //     onPressed: _deleteSelectedPhotos,
+          //   ),
+          // IconButton(
+          //   icon: Icon(_selectAll ? Icons.select_all : Icons.select_all),
+          //   onPressed: _toggleSelectAll,
+          // ),
+          IconButton(
+            icon: Icon(_isAscending
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_downward_rounded),
+            onPressed: _toggleSortOrder,
+          ),
+          IconButton(
+            icon: Icon(
+                _isGridView ? Icons.list_alt_rounded : Icons.grid_view_rounded),
+            onPressed: _toggleView,
+          ),
+        ],
+      ),
+      body: Builder(
+        builder: (context) {
+          if (!_isPermissionGranted) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                      'Storage permission is required to access photos.'),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _requestPermission, // Request permission
+                    child: const Text('Grant Permission'),
+                  ),
+                ],
               ),
-            ),
-            // Show the count and size of selected photos if any are selected
-            if (_selectedPhotos.isNotEmpty)
+            );
+          }
+
+          // Show a loader when photos are still being fetched
+          if (_photos.isEmpty && _isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          // If there are no photos and no loading state, show a placeholder
+          if (_photos.isEmpty && !_isLoading) {
+            return const Center(
+              child: Text("No photos found."),
+            );
+          }
+
+          // Total size and count of images
+          final totalSize = _photos.fold(
+              0, (sum, photo) => sum + (photo['size'] as int? ?? 0));
+          final totalSizeFormatted = formatFileSize(totalSize);
+          final totalCount = _photos.length;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Padding(
+              //   padding: const EdgeInsets.only(left: 20.0),
+              //   child: Text(
+              //     '$totalCount Total ($totalSizeFormatted)',
+              //     style: Theme.of(context).textTheme.titleMedium,
+              //   ),
+              // ),
+              // // Show the count and size of selected photos if any are selected
+              // if (_selectedPhotos.isNotEmpty)
+              //   Padding(
+              //     padding: const EdgeInsets.all(8.0),
+              //     child: Text(
+              //       'Selected images: ${_getSelectedPhotosCount()} | Total size of selected: ${formatFileSize(_getSelectedPhotosTotalSize())}',
+              //       style: Theme.of(context).textTheme.bodyMedium,
+              //     ),
+              //   ),
+              Divider(height: 2, color: Colors.grey.withOpacity(0.2)),
               Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  'Selected images: ${_getSelectedPhotosCount()} | Total size of selected: ${formatFileSize(_getSelectedPhotosTotalSize())}',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                padding: const EdgeInsets.only(left: 0, right: 10),
+                child: SizedBox(
+                  // color: Colors.blue,
+                  height: 70,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 0),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              color: _selectAll ? Colors.blue : Colors.grey,
+                              icon: Icon(
+                                _selectAll
+                                    ? Icons.check_box
+                                    : Icons.check_box_outline_blank_rounded,
+                              ),
+                              onPressed: _toggleSelectAll,
+                            ),
+                            Text(
+                              'Total $totalCount ($totalSizeFormatted)',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: const Color.fromARGB(255, 99, 99, 99),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_selectedPhotos.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 0.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 188, 2, 2),
+                                borderRadius: BorderRadius.circular(50)),
+                            child: GestureDetector(
+                              onTap: _deleteSelectedPhotos,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '${_selectedPhotos.length} selected (${FileUtils.formatFileSize(_getSelectedPhotosTotalSize())})',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.delete,
+                                    size: 15,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            Expanded(
-              child: _isGridView
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 10.0,
-                          mainAxisSpacing: 10.0,
-                          childAspectRatio: 0.7,
+              Expanded(
+                child: _isGridView
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 10.0,
+                            mainAxisSpacing: 10.0,
+                            childAspectRatio: 0.7,
+                          ),
+                          itemCount: _photos.length + 1, // Add 1 for the loader
+                          itemBuilder: (context, index) {
+                            if (index == _photos.length) {
+                              if (_isLoading) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                              return const SizedBox.shrink(); // Placeholder
+                            }
+
+                            final photo = _photos[index];
+                            final size = formatFileSize(photo['size'] as int);
+                            final date = formatDate(photo['date'] as int);
+
+                            // Check if the photo is selected
+                            final isSelected = _selectedPhotos.contains(photo);
+
+                            return GridTile(
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ImageViewerPage(
+                                        photo: _photos[
+                                            index], // Pass the selected photo
+                                        photos:
+                                            _photos, // Pass the list of all photos
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.blue
+                                          : Colors.grey.withOpacity(0.5),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
+                                          child: Image.file(
+                                            File(photo['path'] as String),
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            if (isSelected) {
+                                              _selectedPhotos.remove(photo);
+                                            } else {
+                                              _selectedPhotos.add(photo);
+                                            }
+                                          });
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                size,
+                                                overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  style: GoogleFonts.montserrat(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Colors.black54,
+                                                  ),
+                                              ),
+                                              Checkbox(
+                                                value: isSelected,
+                                                onChanged: (bool? selected) {
+                                                  setState(() {
+                                                    if (selected == true) {
+                                                      _selectedPhotos
+                                                          .add(photo);
+                                                    } else {
+                                                      _selectedPhotos
+                                                          .remove(photo);
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
+                      )
+                    : ListView.builder(
                         itemCount: _photos.length + 1, // Add 1 for the loader
                         itemBuilder: (context, index) {
                           if (index == _photos.length) {
@@ -395,162 +589,91 @@ Widget build(BuildContext context) {
                           final size = formatFileSize(photo['size'] as int);
                           final date = formatDate(photo['date'] as int);
 
-                          // Check if the photo is selected
-                          final isSelected = _selectedPhotos.contains(photo);
-
-                          return GridTile(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ImageViewerPage(
-                                      photo: _photos[
-                                          index], // Pass the selected photo
-                                      photos:
-                                          _photos, // Pass the list of all photos
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Colors.blue
-                                        : Colors.grey.withOpacity(0.5),
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
-                                        child: Image.file(
-                                          File(photo['path'] as String),
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          if (isSelected) {
-                                            _selectedPhotos.remove(photo);
-                                          } else {
-                                            _selectedPhotos.add(photo);
-                                          }
-                                        });
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(4.0),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              size,
-                                              style: TextStyle(
-                                                fontSize: 12.0,
-                                                color: Colors.black
-                                                    .withOpacity(0.7),
-                                              ),
-                                            ),
-                                            Checkbox(
-                                              value: isSelected,
-                                              onChanged: (bool? selected) {
-                                                setState(() {
-                                                  if (selected == true) {
-                                                    _selectedPhotos
-                                                        .add(photo);
-                                                  } else {
-                                                    _selectedPhotos
-                                                        .remove(photo);
-                                                  }
-                                                });
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                          return ListTile(
+                            leading: Image.file(
+                              File(photo['path'] as String),
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
                             ),
+                            title: Text(
+                              photo['name'] as String,
+                              overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black,
+                                ),
+                            ),
+                            // subtitle: Column(
+                            //   crossAxisAlignment: CrossAxisAlignment.start,
+                            //   children: [
+                            //     Text('Size: $size'),
+                            //     Text('Date: $date'),
+                            //   ],
+                            // ),
+                            subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        date,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color.fromARGB(
+                                              255, 88, 88, 88),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 60),
+                                      Text(
+                                        size,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color.fromARGB(
+                                              255, 88, 88, 88),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            trailing: Checkbox(
+                              value: _selectedPhotos.contains(photo),
+                              onChanged: (bool? selected) {
+                                setState(() {
+                                  if (selected == true) {
+                                    _selectedPhotos.add(photo);
+                                  } else {
+                                    _selectedPhotos.remove(photo);
+                                  }
+                                });
+                              },
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ImageViewerPage(
+                                    photo: _photos[
+                                        index], // Pass the selected photo
+                                    photos:
+                                        _photos, // Pass the list of all photos
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: _photos.length + 1, // Add 1 for the loader
-                      itemBuilder: (context, index) {
-                        if (index == _photos.length) {
-                          if (_isLoading) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-                          return const SizedBox.shrink(); // Placeholder
-                        }
-
-                        final photo = _photos[index];
-                        final size = formatFileSize(photo['size'] as int);
-                        final date = formatDate(photo['date'] as int);
-
-                        return ListTile(
-                          leading: Image.file(
-                            File(photo['path'] as String),
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
-                          title: Text(photo['name'] as String),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Size: $size'),
-                              Text('Date: $date'),
-                            ],
-                          ),
-                          trailing: Checkbox(
-                            value: _selectedPhotos.contains(photo),
-                            onChanged: (bool? selected) {
-                              setState(() {
-                                if (selected == true) {
-                                  _selectedPhotos.add(photo);
-                                } else {
-                                  _selectedPhotos.remove(photo);
-                                }
-                              });
-                            },
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ImageViewerPage(
-                                  photo: _photos[
-                                      index], // Pass the selected photo
-                                  photos:
-                                      _photos, // Pass the list of all photos
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-            ),
-          ],
-        );
-      },
-    ),
-  );
-}
-
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }

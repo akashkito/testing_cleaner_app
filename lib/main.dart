@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:testing_cleaner_app/test/homemainscreen.dart';
+import 'package:testing_cleaner_app/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       //   colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       //   useMaterial3: true,
       // ),
-      home: MainScreen(),
+      home: SplashScreen(),
     );
   }
 }

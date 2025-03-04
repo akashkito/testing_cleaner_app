@@ -2,13 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_cleaner_app/files/all_files.dart';
+import 'package:testing_cleaner_app/liquid_swipe_page.dart';
 import 'package:testing_cleaner_app/media/video/videos_page.dart';
 import 'package:testing_cleaner_app/system_info_page.dart';
 import 'package:testing_cleaner_app/test/view_screen.dart';
 
 import '../apps/apps_page.dart';
-import '../media/audios_page.dart';
+import '../media/audio/audios_page.dart';
 import '../media/photo/photos_page.dart';
 import '../storage/storage_service.dart';
 import '../storage/storage_widget.dart';
@@ -140,7 +142,25 @@ class _HomeScreen2State extends State<HomeScreen2> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SystemInfoPage(),
+                      builder: (context) => const SystemInfoPage(),
+                    ));
+              },
+              trailing: const Text(
+                "50 GB",
+                style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('swiper'),
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LiquidSwipePage(),
                     ));
               },
               trailing: const Text(
@@ -170,8 +190,8 @@ class _HomeScreen2State extends State<HomeScreen2> {
                         boxShadow: [
                           BoxShadow(
                               color: Colors.grey.withOpacity(0.4),
-                              blurRadius: 10,
-                              offset: const Offset(0, 20),
+                              blurRadius: 100,
+                              offset: const Offset(0, 0),
                               spreadRadius: 1)
                         ],
                         borderRadius: const BorderRadius.only(
@@ -186,8 +206,8 @@ class _HomeScreen2State extends State<HomeScreen2> {
                       width: MediaQuery.of(context).size.width,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          vertical: 20,
-                          horizontal: 30,
+                          vertical: 15,
+                          horizontal: 15,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -205,7 +225,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.grey.withOpacity(0.4),
-                                      blurRadius: 20,
+                                      blurRadius: 50,
                                       offset: const Offset(0, 0),
                                       spreadRadius: 1,
                                     ),
@@ -225,8 +245,8 @@ class _HomeScreen2State extends State<HomeScreen2> {
                                   boxShadow: [
                                     BoxShadow(
                                         color: Colors.grey.withOpacity(0.4),
-                                        blurRadius: 20,
-                                        offset: const Offset(00, 0),
+                                        blurRadius:50,
+                                        offset: const Offset(0, 0),
                                         spreadRadius: 1)
                                   ],
                                 ),
@@ -241,11 +261,11 @@ class _HomeScreen2State extends State<HomeScreen2> {
 
                   //Storage info
                   Positioned(
-                      top: 150,
+                      top: 80,
                       left: 20,
-                      right: 40,
+                      right: 20,
                       child: Container(
-                          padding: const EdgeInsets.all(10),
+                          // padding: const EdgeInsets.all(10),
                           // decoration: BoxDecoration(
                           //   color: Colors.white,
                           //   borderRadius: BorderRadius.circular(20),
@@ -263,20 +283,20 @@ class _HomeScreen2State extends State<HomeScreen2> {
                   //Button
                   Positioned(
                     width: MediaQuery.of(context).size.width,
-                    top: 255,
+                    top: 265,
                     child: Center(
                       child: Container(
                         width: 150,
-                        height: 70,
+                        height: 60,
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: const Color.fromARGB(255, 8, 108, 126),
                           borderRadius: BorderRadius.circular(120),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.grey.withOpacity(0.4),
                               blurRadius: 10,
                               offset: const Offset(0, 0),
-                              spreadRadius: 5,
+                              spreadRadius: 1,
                             ),
                           ],
                         ),
@@ -299,15 +319,15 @@ class _HomeScreen2State extends State<HomeScreen2> {
                               ),
                             );
                           },
-                          splashColor: Colors.blue
+                          splashColor: const Color.fromARGB(255, 86, 145, 194)
                               .withOpacity(0.3), // Splash color on tap
                           borderRadius: BorderRadius.circular(120),
-                          child: const Center(
+                          child: Center(
                             child: Text(
                               "Quick Clean",
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
                                   color: Colors.white),
                             ),
                           ),
@@ -338,11 +358,16 @@ class _HomeScreen2State extends State<HomeScreen2> {
 
                   return GridView.count(
                     crossAxisCount: 2,
+                    childAspectRatio: 1,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    padding: const EdgeInsets.all(0),
                     children: <Widget>[
                       _buildGridItem(
                         context,
                         "Apps",
-                        Icons.apps,
+                        // Icons.apps,
+                        'assets/app_icon.png',
                         totalStorage,
                         () async {
                           // Show a progress indicator before navigation
@@ -371,7 +396,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  AppsPage(), // Target page (AppsPage)
+                                  const AppsPage(), // Target page (AppsPage)
                             ),
                           );
                         },
@@ -379,31 +404,32 @@ class _HomeScreen2State extends State<HomeScreen2> {
                       _buildGridItem(
                         context,
                         "Photos",
-                        Icons.photo,
+                        // Icons.photo,
+                        'assets/audios_icon.png',
                         totalStorage,
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => PhotosPage()),
+                          MaterialPageRoute(builder: (context) => const PhotosPage()),
                         ),
                       ),
                       _buildGridItem(
                         context,
                         "Videos",
-                        Icons.video_library,
+                        'assets/photo_icon.png',
                         totalStorage,
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => VideosPage()),
+                          MaterialPageRoute(builder: (context) => const VideosPage()),
                         ),
                       ),
                       _buildGridItem(
                         context,
                         "Audios",
-                        Icons.audiotrack,
+                        'assets/videos_icon.png',
                         totalStorage,
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => AudiosPage()),
+                          MaterialPageRoute(builder: (context) => const AudiosPage()),
                         ),
                       ),
                     ],
@@ -604,14 +630,15 @@ class _HomeScreen2State extends State<HomeScreen2> {
   Widget _buildGridItem(
     BuildContext context,
     String title,
-    IconData icon,
+    // IconData icon,
+    String img,
     int totalStorage,
     Function onTap,
   ) {
     return GestureDetector(
       onTap: () => onTap(),
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(8),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
           decoration: BoxDecoration(
@@ -621,7 +648,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
               BoxShadow(
                 color: Colors.grey.withOpacity(0.4),
                 blurRadius: 10,
-                offset: const Offset(0, 20),
+                offset: const Offset(0, 5),
                 spreadRadius: 1,
               ),
             ],
@@ -638,27 +665,39 @@ class _HomeScreen2State extends State<HomeScreen2> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(15),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                         color: Colors.white,
-                        border: Border.all(color: Colors.grey, width: 0.5),
+                        border: Border.all(
+                          color: Colors.grey,
+                          width: 0.5,
+                        ),
                       ),
-                      child: Icon(
-                        icon,
-                        size: 30,
-                      ),
+                      child: 
+                      Image.asset(img, width: 30,height: 30,)
+                      // Icon(
+                      //   icon,
+                      //   size: 30,
+                      // ),
                     ),
+                    const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 10),
+                        vertical: 5,
+                        horizontal: 5,
+                      ),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(6),
                         color: Colors.white,
                         border: Border.all(color: Colors.grey, width: 0.5),
                       ),
                       child: Text(
                         '${(totalStorage / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
                   ],
@@ -670,20 +709,20 @@ class _HomeScreen2State extends State<HomeScreen2> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 5),
               // Storage Info Row
-              Row(
+              const Row(
                 children: [
                   Text(
-                    '${(totalStorage / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB',
-                    style: const TextStyle(color: Colors.grey),
+                    'count',
+                    style: TextStyle(color: Colors.grey),
                   ),
                 ],
               ),

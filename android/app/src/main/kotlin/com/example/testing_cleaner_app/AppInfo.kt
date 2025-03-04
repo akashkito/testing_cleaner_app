@@ -30,25 +30,37 @@ const val REQUEST_CODE = 1001  // Define the request code for permission
 object AppInfo {
 
     // Check and request necessary permissions
-    fun checkAndRequestPermissions(activity: Activity) {
-        val permissions = mutableListOf<String>()
+    // Check and request necessary permissions
+fun checkAndRequestPermissions(activity: Activity) {
+    val permissions = mutableListOf<String>()
 
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
+    // Check if READ_EXTERNAL_STORAGE permission is granted
+    if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
 
-        if (!isUsagePermissionGranted(activity)) {
-            permissions.add(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-        }
+    // Check if Usage Access permission is granted
+    if (!isUsagePermissionGranted(activity)) {
+        permissions.add(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            permissions.add(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-        }
+    // Check if External Storage Manager permission is required (Android 11 and above)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+        permissions.add(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+    }
 
-        if (permissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(activity, permissions.toTypedArray(), REQUEST_CODE)
+    // Check if QUERY_ALL_PACKAGES permission is required (Android 11 and above)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.QUERY_ALL_PACKAGES) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.QUERY_ALL_PACKAGES)
         }
     }
+
+    // Request permissions if any are needed
+    if (permissions.isNotEmpty()) {
+        ActivityCompat.requestPermissions(activity, permissions.toTypedArray(), REQUEST_CODE)
+    }
+}
 
     // Check if usage access permission is granted
     fun isUsagePermissionGranted(context: Context): Boolean {
@@ -143,60 +155,70 @@ object AppInfo {
         return appsList
     }
 
-    // Helper method to get app size (APK size)
     fun getAppSize(appSourceDir: String): Long {
-        val appFile = File(appSourceDir)
-        return if (appFile.exists()) appFile.length() else 0L
-    }
-
-    // Helper method to calculate data size
-    fun getDataSize(packageName: String, context: Context): Long {
-        val dataDir = File("/data/data/$packageName")
-        return if (dataDir.exists()) getFolderSize(dataDir) else 0L
-    }
-
-    fun getCacheSize(context: Context, packageName: String): Long {
-    try {
-        val cacheDir = File(context.cacheDir, packageName)
-        if (cacheDir.exists()) {
-            Log.d("Cache Access", "Cache directory exists: ${cacheDir.path}")
-            return getDirectorySize(cacheDir)
-        } else {
-            Log.d("Cache Access", "Cache directory does not exist: ${cacheDir.path}")
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-    return 0
+    // Get the APK file size (APK is the main app file)
+    val appFile = File(appSourceDir)
+    return if (appFile.exists()) appFile.length() else 0L
 }
 
+fun getDataSize(packageName: String, context: Context): Long {
+    // Data directory for the app
+    val dataDir = File("/data/data/$packageName")
+    return if (dataDir.exists()) {
+        getFolderSize(dataDir)
+    } else {
+        Log.d("AppInfo", "Data directory not found: $dataDir")
+        0L
+    }
+}
 
-    // Helper method to calculate directory size (recursive)
-    fun getDirectorySize(file: File): Long {
-        var size = 0L
-        if (file.exists()) {
-            val files = file.listFiles()
-            if (files != null) {
-                for (f in files) {
-                    size += if (f.isDirectory) {
-                        getDirectorySize(f)
-                    } else {
-                        f.length()
-                    }
+fun getCacheSize(context: Context, packageName: String): Long {
+    try {
+        // Try to fetch the cache directory for the app
+        val cacheDir = File("/data/data/$packageName/cache")
+        if (cacheDir.exists()) {
+            return getDirectorySize(cacheDir)
+        } else {
+            // Fallback to app's default cacheDir
+            val appCacheDir = File(context.cacheDir, packageName)
+            if (appCacheDir.exists()) {
+                return getDirectorySize(appCacheDir)
+            }
+            Log.d("Cache Access", "Cache directory does not exist for package: $packageName")
+        }
+    } catch (e: Exception) {
+        Log.e("Cache Access", "Error fetching cache size for package $packageName", e)
+    }
+    return 0L
+}
+
+// Helper function to calculate folder size recursively
+fun getFolderSize(file: File): Long {
+    var size: Long = 0
+    file.listFiles()?.forEach {
+        size += if (it.isDirectory) getFolderSize(it) else it.length()
+    }
+    return size
+}
+
+// Helper function to calculate directory size (recursive)
+fun getDirectorySize(file: File): Long {
+    var size = 0L
+    if (file.exists()) {
+        val files = file.listFiles()
+        if (files != null) {
+            for (f in files) {
+                size += if (f.isDirectory) {
+                    getDirectorySize(f)
+                } else {
+                    f.length()
                 }
             }
         }
-        return size
     }
+    return size
+}
 
-    // Helper method to calculate folder size (recursive)
-    fun getFolderSize(file: File): Long {
-        var size: Long = 0
-        file.listFiles()?.forEach {
-            size += if (it.isDirectory) getFolderSize(it) else it.length()
-        }
-        return size
-    }
 
     // Get install date in readable format
     fun getInstallDate(timeInMillis: Long): String {
@@ -238,42 +260,51 @@ object AppInfo {
     }
 
     // Get app usage stats (screen time)
-    fun getAppUsageStats(context: Context) {
-        val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val time = System.currentTimeMillis()
+fun getAppUsageStats(context: Context): List<Map<String, Any>> {
+    val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+    val calendar = Calendar.getInstance()
+    calendar.add(Calendar.DAY_OF_YEAR, -1)  // For stats from the last day
+    val stats = usageStatsManager.queryUsageStats(
+        UsageStatsManager.INTERVAL_DAILY,
+        calendar.timeInMillis,
+        System.currentTimeMillis()
+    )
 
-        if (!isUsagePermissionGranted(context)) {
-            println("Usage access permission is not granted.")
-            return
+    val usageStatsList = mutableListOf<Map<String, Any>>()
+
+    if (stats != null && stats.isNotEmpty()) {
+        for (usageStat in stats) {
+            // Make sure usageStat is of type UsageStats
+            val appInfo = mapOf(
+                "packageName" to usageStat.packageName,  // Package name of the app
+                "lastUsed" to usageStat.lastTimeUsed,    // Last time the app was used
+                "totalTime" to usageStat.totalTimeInForeground  // Total time in foreground
+            )
+            usageStatsList.add(appInfo)
         }
-
-        // Query usage stats for the past 7 days
-        val appStats = usm.queryUsageStats(
-            UsageStatsManager.INTERVAL_WEEKLY,
-            time - TimeUnit.DAYS.toMillis(7),
-            time
-        )
-
-        if (appStats.isEmpty()) {
-            println("No usage stats found.")
-            return
-        }
-
-        // Process and print the app usage stats
-        appStats.forEach { usageStats ->
-            val lastUsed = usageStats.lastTimeUsed
-            val totalTime = usageStats.totalTimeInForeground
-            val formattedTime = formatDuration(totalTime)
-
-            println("Package: ${usageStats.packageName}, Last Used: $lastUsed, Total Time: $formattedTime")
-        }
+    } else {
+        throw Exception("No usage stats available")
     }
+    return usageStatsList
+}
 
-    // Format duration in hours, minutes, seconds
-    fun formatDuration(durationMillis: Long): String {
-        val hours = TimeUnit.MILLISECONDS.toHours(durationMillis)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(durationMillis) % 60
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(durationMillis) % 60
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+// Helper function to get time difference in milliseconds based on the interval
+fun getTimeIntervalMillis(interval: Int): Long {
+    return when (interval) {
+        UsageStatsManager.INTERVAL_DAILY -> TimeUnit.DAYS.toMillis(1)
+        UsageStatsManager.INTERVAL_WEEKLY -> TimeUnit.DAYS.toMillis(7)
+        UsageStatsManager.INTERVAL_MONTHLY -> TimeUnit.DAYS.toMillis(30)
+        else -> TimeUnit.DAYS.toMillis(1)
     }
+}
+
+
+   // Format duration in hours, minutes, seconds
+fun formatDuration(durationMillis: Long): String {
+    val hours = TimeUnit.MILLISECONDS.toHours(durationMillis)
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(durationMillis) % 60
+    val seconds = TimeUnit.MILLISECONDS.toSeconds(durationMillis) % 60
+    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+}
+
 }

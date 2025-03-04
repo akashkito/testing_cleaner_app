@@ -1,0 +1,2 @@
+C:/Users/Rishabh/Documents/GitHub/testing_cleaner_app/android/app/.cxx/RelWithDebInfo/2h1p434d/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/Rishabh/Documents/GitHub/testing_cleaner_app/android/app/.cxx/RelWithDebInfo/2h1p434d/arm64-v8a/CMakeFiles/rebuild_cache.dir

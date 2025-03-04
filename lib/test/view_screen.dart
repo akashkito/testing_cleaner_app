@@ -358,7 +358,7 @@ class _ViewPageState extends State<ViewPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MainScreen(),
+                  builder: (context) => const MainScreen(),
                 ),
               );
             },
@@ -397,7 +397,7 @@ class _ViewPageState extends State<ViewPage> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => StorageInfoWidget()));
+                                builder: (context) => const StorageInfoWidget()));
                       },
                       child: const Text('Get Storage Info')),
                 ],

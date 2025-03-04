@@ -242,6 +242,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class FolderAccessPage extends StatefulWidget {
+  const FolderAccessPage({super.key});
+
   @override
   _FolderAccessPageState createState() => _FolderAccessPageState();
 }
@@ -249,7 +251,7 @@ class FolderAccessPage extends StatefulWidget {
 class _FolderAccessPageState extends State<FolderAccessPage> {
   static const platform = MethodChannel('com.example.testing_cleaner_app');
   List<FileItem> _fileItems = [];
-  List<FileItem> _selectedFiles = [];
+  final List<FileItem> _selectedFiles = [];
   bool isLoading = false;
 
   String? _selectedDirectory;
@@ -328,7 +330,7 @@ class _FolderAccessPageState extends State<FolderAccessPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Access Folders'),
+        title: const Text('Access Folders'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -344,7 +346,7 @@ class _FolderAccessPageState extends State<FolderAccessPage> {
                     future: platform.invokeMethod('getFilesInDirectory', {'directoryPath': directory['path']}),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
+                        return const CircularProgressIndicator();
                       }
                       if (snapshot.hasData) {
                         final files = List<FileItem>.from(
@@ -363,7 +365,7 @@ class _FolderAccessPageState extends State<FolderAccessPage> {
                           ],
                         );
                       } else {
-                        return Text('No data');
+                        return const Text('No data');
                       }
                     },
                   ),
@@ -374,7 +376,7 @@ class _FolderAccessPageState extends State<FolderAccessPage> {
                   future: platform.invokeMethod('getFilesInDirectory', {'directoryPath': directory['path']}),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasData) {
                       final files = List<FileItem>.from(
@@ -392,8 +394,8 @@ class _FolderAccessPageState extends State<FolderAccessPage> {
                           return CheckboxListTile(
                             title: Row(
                               children: [
-                                Icon(Icons.insert_drive_file),  // Default icon
-                                SizedBox(width: 8),
+                                const Icon(Icons.insert_drive_file),  // Default icon
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     fileItem.name,
@@ -413,7 +415,7 @@ class _FolderAccessPageState extends State<FolderAccessPage> {
                         },
                       );
                     } else {
-                      return Center(child: Text('No files found in this folder.'));
+                      return const Center(child: Text('No files found in this folder.'));
                     }
                   },
                 ),

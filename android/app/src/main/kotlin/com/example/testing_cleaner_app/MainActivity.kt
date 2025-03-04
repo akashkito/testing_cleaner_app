@@ -17,6 +17,15 @@ import io.flutter.embedding.engine.FlutterEngine
 import android.os.Environment
 import android.widget.Toast
 import com.example.your_app_name.FileAccessPhone
+import android.media.MediaPlayer
+import android.app.Activity
+import android.util.Log
+import java.util.Calendar
+
+import android.app.usage.UsageStats
+import android.app.usage.UsageStatsManager
+import android.content.Context
+
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.testing_cleaner_app"
@@ -52,6 +61,15 @@ class MainActivity : FlutterActivity() {
                     "getPhotoFiles" -> handleGetPhotoFiles(result)
                     "getVideoFiles" -> handleGetVideoFiles(result)
                     "getAudioFiles" -> handleGetAudioFiles(result)
+                    "getAudioDuration" -> {
+                    val path = call.argument<String>("path")
+                    if (path != null) {
+                        val duration = getAudioDuration(path)
+                        result.success(duration)
+                    } else {
+                        result.error("UNAVAILABLE", "Audio path not available", null)
+                    }
+                }
                     "getBatteryLevel" -> handleGetBatteryLevel(result)
                     "getBatteryStatus" -> handleGetBatteryStatus(result)
                     "getStorageInfo" -> handleGetStorageInfo(result)
@@ -65,6 +83,64 @@ class MainActivity : FlutterActivity() {
                     "getCameraInfo" -> handleGetCameraInfo(result)
                     "getProcessorInfo" -> handleGetProcessorInfo(result)
                     "getJunkFiles" -> handleGetJunkFiles(result)
+                    "getAppUsageStats" -> {
+    // Get the UsageStatsManager system service
+    val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+    val calendar = Calendar.getInstance()
+
+    // Example for daily stats (you can use INTERVAL_HOURLY for hourly stats)
+    calendar.add(Calendar.DAY_OF_YEAR, -1)  // Get stats from the last 24 hours
+
+    // Query for usage stats within the defined time period (last 24 hours)
+    val stats = usageStatsManager.queryUsageStats(
+        UsageStatsManager.INTERVAL_DAILY, // Change this to INTERVAL_HOURLY for hourly stats
+        calendar.timeInMillis,
+        System.currentTimeMillis()
+    )
+
+    fun formatDuration(totalTimeInForeground: Long): String {
+        val seconds = totalTimeInForeground / 1000
+        val minutes = seconds / 60
+        val hours = minutes / 60
+
+        return if (hours > 0) {
+            "${hours}h ${minutes % 60}m"
+        } else {
+            "${minutes}m ${seconds % 60}s"
+        }
+    }
+
+    // Check if the stats are not empty and process the data
+    if (stats != null && stats.isNotEmpty()) {
+        val usageStatsList = mutableListOf<Map<String, Any>>()
+
+        // Iterate through the retrieved stats
+        for (usageStat in stats) {
+            val packageName = usageStat.packageName  // Get the package name of the app
+            val lastUsed = usageStat.lastTimeUsed  // Get the last time the app was used
+            val totalTime = usageStat.totalTimeInForeground  // Get the total time the app was in the foreground
+
+            // Create a map to hold the app info
+            val appInfo = mapOf(
+                "packageName" to packageName,
+                "lastUsed" to lastUsed,
+                "totalTime" to formatDuration(totalTime)  // You can use the existing formatDuration function
+            )
+
+            // Add the app information to the list
+            usageStatsList.add(appInfo)
+        }
+
+        // Return the result to Flutter (or whatever platform you're using)
+        result.success(usageStatsList)
+
+    } else {
+        // If no usage stats are found, send an error message
+        result.error("UNAVAILABLE", "No usage stats found", null)
+    }
+}
+
+
                     "openAppSettings" -> {
                         openAppSettings()
                         result.success(null)
@@ -124,11 +200,39 @@ class MainActivity : FlutterActivity() {
                             result.success(false)
                         }
                     }
+                    "uninstallApp" -> {
+                        // Get the package name from the Flutter side
+                        val packageName = call.argument<String>("packageName")
+                        if (packageName != null) {
+                            // Call uninstallApp from appinfo.kt
+                            uninstallApp(this, packageName)
+                            result.success("Uninstall initiated")
+                        } else {
+                            result.error("ERROR", "Package name not provided", null)
+                        }
+                    }
                     
 
                     else -> result.notImplemented()
                 }
             }
+        }
+    }
+
+    private fun getAudioDuration(path: String): String {
+        val mediaPlayer = MediaPlayer()
+        try {
+            mediaPlayer.setDataSource(path)
+            mediaPlayer.prepare() // This might take time
+            val duration = mediaPlayer.duration
+            mediaPlayer.release()
+
+            val minutes = duration / 1000 / 60
+            val seconds = (duration / 1000) % 60
+            return "$minutes m $seconds s"
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return "Unknown"
         }
     }
 
@@ -318,6 +422,19 @@ private fun handleGetAudioFiles(result: MethodChannel.Result) {
             result.error("PERMISSION_DENIED", "Usage Access Permission not granted", null)
         }
     }
+
+   private fun uninstallApp(context: Context, packageName: String) {
+    val uninstallIntent = Intent(Intent.ACTION_UNINSTALL_PACKAGE)
+    uninstallIntent.data = Uri.parse("package:$packageName")
+    uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true)
+
+    // Using startActivityForResult to handle the result of uninstallation
+    if (context is Activity) {
+        context.startActivityForResult(uninstallIntent, REQUEST_CODE)
+    } else {
+        Log.e("AppInfo", "Context is not an Activity, cannot call startActivityForResult")
+    }
+}
 
     // Get device info
     private fun handleGetDeviceInfo(result: MethodChannel.Result) {
