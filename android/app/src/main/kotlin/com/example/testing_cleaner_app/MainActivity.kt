@@ -17,6 +17,10 @@ import io.flutter.embedding.engine.FlutterEngine
 import android.os.Environment
 import android.widget.Toast
 import com.example.your_app_name.FileAccessPhone
+import com.example.testing_cleaner_app.OtherFilesUtil
+import io.flutter.plugin.common.MethodCall
+import java.io.File
+
 import android.media.MediaPlayer
 import android.app.Activity
 import android.util.Log
@@ -83,6 +87,7 @@ class MainActivity : FlutterActivity() {
                     "getCameraInfo" -> handleGetCameraInfo(result)
                     "getProcessorInfo" -> handleGetProcessorInfo(result)
                     "getJunkFiles" -> handleGetJunkFiles(result)
+                    
                     "getAppUsageStats" -> {
     // Get the UsageStatsManager system service
     val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
@@ -154,18 +159,39 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
                      "getFilesInDirectory" -> {
-                    val directoryPath = call.argument<String>("directoryPath")
-                    if (directoryPath != null) {
-                        val files = FileAccessPhone.getFilesInDirectory(this, directoryPath)
-                        result.success(files)
-                    } else {
-                        result.error("INVALID_ARGUMENT", "Directory path is null", null)
-                    }
-                }
+    val directoryPath = call.argument<String>("directoryPath")
+    val offset = call.argument<Int>("offset") ?: 0 // Use 0 as default if offset is not provided
+    
+    if (directoryPath != null) {
+        // Now pass the directoryPath and offset to getFilesInDirectory
+        val files = FileAccessPhone.getFilesInDirectory(this, directoryPath, offset)
+        result.success(files)
+    } else {
+        result.error("INVALID_ARGUMENT", "Directory path is null", null)
+    }
+}
                 "getSpecialFolders" -> {
                     val specialFolders = FileAccessPhone.getSpecialFolders(this)
                     result.success(specialFolders)
                 }
+                 "getOtherFiles" -> handleGetOtherFiles(result)
+                "deleteOtherFile" -> handleDeleteFile(call, result)
+               
+                
+                 "deleteFile" -> {
+                        val filePath = call.argument<String>("filePath")
+                        if (filePath != null) {
+                            // Call the deleteFile method
+                            val success = FileAccessPhone.deleteFile(filePath)
+                            if (success) {
+                                result.success(true) // Successfully deleted the file
+                            } else {
+                                result.error("DELETE_FAILED", "Failed to delete the file.", null)
+                            }
+                        } else {
+                            result.error("INVALID_ARGUMENT", "File path is null", null)
+                        }
+                    }
                     "checkStoragePermission" -> {
                         val isPermissionGranted = FileAccessPhone.isPermissionGranted(applicationContext)
                         result.success(isPermissionGranted)
@@ -236,20 +262,81 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun openAllFilesAccessSettings() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-            val uri = Uri.fromParts("package", packageName, null)
-            intent.data = uri
-            startActivity(intent)
-        } else {
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            val uri = Uri.fromParts("package", packageName, null)
-            intent.data = uri
-            startActivity(intent)
+
+
+     private fun openAllFilesAccessSettings() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // For Android 11+ (API 30+), we need to check for MANAGE_EXTERNAL_STORAGE permission
+                val isPermissionGranted = isStoragePermissionGranted()
+                if (isPermissionGranted) {
+                    // Permission is granted
+                    println("Permission already granted.")
+                } else {
+                    // Launch settings to request permission
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    val uri = Uri.fromParts("package", packageName, null)
+                    intent.data = uri
+                    startActivity(intent)
+                    println("Opening 'All Files Access' settings.")
+                }
+            } else {
+                // For older Android versions, open the general app settings
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", packageName, null)
+                intent.data = uri
+                startActivity(intent)
+                println("Opening app settings for older versions.")
+            }
+        } catch (e: Exception) {
+            // Catch any exceptions to prevent crashes
+            println("Error opening settings: ${e.message}")
         }
     }
 
+    private fun isStoragePermissionGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Check if permission to manage files is granted (only needed for Android 11+)
+            android.os.Environment.isExternalStorageManager()
+        } else {
+            // Permissions are handled by regular storage permissions on lower versions
+            true // Assuming permissions are granted for versions below Android 11
+        }
+    }
+
+     private fun handleGetOtherFiles(result: MethodChannel.Result) {
+        try {
+            // Call the utility method to get files
+            val files = OtherFilesUtil.getOtherFiles(applicationContext)
+            val filesList = files.map { file ->
+                mapOf("name" to file.name, "size" to file.length(), "path" to file.absolutePath)
+            }
+            result.success(filesList) // Send the result back to Flutter
+        } catch (e: Exception) {
+            result.error("ERROR", "Failed to get other files: ${e.message}", null)
+        }
+    }
+
+    private fun handleDeleteFile(call: MethodCall, result: MethodChannel.Result) {
+        val filePath = call.argument<String>("filePath")
+        if (filePath != null) {
+            try {
+                val file = File(filePath ?: "")
+                val success = OtherFilesUtil.deleteOtherFile(file)
+
+                if (success) {
+                    result.success(true) // File deleted successfully
+                } else {
+                    result.error("ERROR", "Failed to delete file", null)
+                }
+            } catch (e: Exception) {
+                result.error("ERROR", "Failed to delete file: ${e.message}", null)
+            }
+        } else {
+            result.error("ERROR", "File path not provided", null)
+        }
+    }
+    
     // Request for basic location and network permissions
     private fun checkPermissions(): Boolean {
         val locationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -283,16 +370,28 @@ class MainActivity : FlutterActivity() {
     }
 
     // Handle speed test functionality
-    private fun handleStartSpeedTest(result: MethodChannel.Result) {
-        if (checkPermissions()) {
-            SpeedTestUtil.startSpeedTest(applicationContext) { speedResult ->
+private fun handleStartSpeedTest(result: MethodChannel.Result) {
+    if (checkPermissions()) {
+        // Call the SpeedTestUtil to start the speed test
+        SpeedTestUtil.startSpeedTest(applicationContext) { speedResult ->
+            // Here, 'speedResult' now contains additional information like Wi-Fi SSID, mobile operator, and location
+            // You can log or send this back as needed
+
+            // Example of how you can handle the result
+            if (speedResult.containsKey("error")) {
+                result.error("SPEED_TEST_FAILED", speedResult["error"], null)
+            } else {
+                // Return the full result
                 result.success(speedResult)
             }
-        } else {
-            requestPermissions()
-            result.error("PERMISSION_DENIED", "Required permissions not granted", null)
         }
+    } else {
+        // Request permissions if not granted
+        requestPermissions()
+        result.error("PERMISSION_DENIED", "Required permissions not granted", null)
     }
+}
+
 
     // Handle storage permission check for Flutter
     private fun handleCheckStoragePermission(result: MethodChannel.Result) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'camera/camera_info.dart';
 import 'display/display_info_page.dart';
 import 'memory/memory_page.dart';
@@ -49,13 +50,26 @@ class _SystemInfoPageState extends State<SystemInfoPage> {
     });
   }
 
+  // Future<void> _fetchCameraInfo() async {
+  //   await cameraInfoClass.fetchCameraInfo();
+  //   setState(() {
+  //     cameraInfo = cameraInfoClass.getStyledCameraInfo();
+  //     isCameraFetched = true;
+  //   });
+  // }
+
+   Widget cameraInfoWidget = Container();
+
+  // Fetching camera info method
   Future<void> _fetchCameraInfo() async {
     await cameraInfoClass.fetchCameraInfo();
     setState(() {
-      cameraInfo = cameraInfoClass.getCameraInfoString();
-      isCameraFetched = true;
+      // Instead of assigning the string, assign the actual widget
+      cameraInfoWidget = cameraInfoClass.getStyledCameraInfo();
+      isCameraFetched = true; // Mark camera info as fetched
     });
   }
+
 
   Future<void> _fetchDisplayInfo() async {
     final displayData = await displayInfoClass.fetchDisplayInfo();
@@ -107,57 +121,156 @@ class _SystemInfoPageState extends State<SystemInfoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('System Info'),
+        title: Text('System Info',
+            style: GoogleFonts.montserrat(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            )),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
             _buildDropdown(
+                Icons.wifi,
                 'WiFi Info',
                 isWifiFetched
                     ? _buildWifiInfo()
                     : const Text('Fetching Wi-Fi Info...'),
                 0),
+            // _buildDropdown(
+            //     Icons.camera,
+            //     'Camera Info',
+            //     isCameraFetched
+            //         ? Text(cameraInfo, style: GoogleFonts.montserrat(fontSize: 14),)
+            //         : const Text('Fetching Camera Info...'),
+            //     1),
             _buildDropdown(
-                'Camera Info',
-                isCameraFetched
-                    ? Text(cameraInfo)
-                    : const Text('Fetching Camera Info...'),
-                1),
+              Icons.camera,
+              'Camera Info',
+              isCameraFetched
+                  ? cameraInfoWidget // Directly use the widget here
+                  : const Text('Fetching Camera Info...'),
+              1,
+            ),
             _buildDropdown(
+                Icons.display_settings,
                 'Display Info',
                 isDisplayFetched
                     ? _buildDisplayInfo()
                     : const Text('Fetching Display Info...'),
                 2),
-            _buildDropdown('Memory Info', _buildMemoryInfo(), 3),
-            _buildDropdown('Processor Info', _buildProcessorInfo(), 4),
-            _buildDropdown('Battery Info', _buildBatteryInfo(), 5),
+            _buildDropdown(
+              Icons.settings_system_daydream_outlined,
+              'Memory Info',
+              _buildMemoryInfo(),
+              3,
+            ),
+            _buildDropdown(
+              Icons.memory_sharp,
+              'Processor Info',
+              _buildProcessorInfo(),
+              4,
+            ),
+            _buildDropdown(
+              Icons.battery_charging_full_outlined,
+              'Battery Info',
+              _buildBatteryInfo(),
+              5,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDropdown(String title, Widget info, int index) {
-    return ExpansionTile(
-      title: Text(title),
-      initiallyExpanded:
-          index == 0, // Only the first one is expanded by default
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: info,
+  Widget _buildDropdown(IconData? icon, String title, Widget info, int index) {
+    bool isExpanded =
+        index == 0; // Change this to check if it's expanded or not
+    return Container(
+      margin: EdgeInsets.only(top: 5, bottom: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4), // Set the border radius here
+        color: Colors.white, // Optional: Set a background color if needed
+        // Optionally, set a border for the container here
+        border: Border.all(
+            color: Colors.blue, width: 0.2), // Adjust border if needed
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: ExpansionTile(
+          // collapsedShape: Border.all(width: 0),
+
+          backgroundColor: const Color.fromARGB(255, 239, 250, 255),
+          collapsedTextColor: const Color.fromARGB(255, 73, 99, 74),
+          collapsedIconColor: const Color.fromARGB(255, 75, 134, 77),
+          collapsedBackgroundColor: const Color.fromARGB(255, 248, 248, 248),
+          leading: Icon(icon),
+          title: Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          shape: Border.all(
+            width: 0,
+          ),
+          initiallyExpanded:
+              isExpanded, // Only the first one is expanded by default
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: info,
+            ),
+          ],
+          // Use onExpansionChanged callback to detect expansion state and apply conditional styling
+          onExpansionChanged: (expanded) {
+            setState(() {
+              isExpanded = expanded;
+            });
+          },
         ),
-      ],
+      ),
     );
   }
 
   Row RowWidget(String title, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text(title), Text(value)],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              width: 120,
+              child: Text(
+                textAlign: TextAlign.end,
+                value,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                 style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w300,
+              ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -178,8 +291,8 @@ class _SystemInfoPageState extends State<SystemInfoPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        RowWidget("Width", displayWidth),
-        RowWidget("Height", displayHeight),
+        RowWidget("Dimension", '${displayWidth}x${displayHeight}'),
+        // RowWidget("Height", displayHeight),
         RowWidget("Refresh Rate", displayRefreshRate),
         RowWidget("Orientation", displayOrientation),
       ],

@@ -20,29 +20,46 @@ class VideoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(video['thumbnail'] as String);
+    // print(video['thumbnail'] as String);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
           horizontal: 16.0), // Optional: Padding to space out content
-      leading: 
-      
-      (video['thumbnail'] as String).isNotEmpty
-          ? Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6)
-            ),
-            child: Image.file(
-                File(video['thumbnail'] as String),
-                width: 60,
-                height: 50,
-                fit: BoxFit.cover,
-                
-              ),
-          )
-          : 
-          
-          const Icon(Icons.video_library),
+      leading:
+
+          // (video['thumbnail'] as String).isNotEmpty
+          //     ? Container(
+          //       clipBehavior: Clip.antiAlias,
+          //       decoration: BoxDecoration(
+          //         borderRadius: BorderRadius.circular(6)
+          //       ),
+          //       child: Image.file(
+          //           File(video['thumbnail'] as String),
+          //           width: 60,
+          //           height: 50,
+          //           fit: BoxFit.cover,
+
+          //         ),
+          //     )
+          //     :
+
+          Container(
+        height: MediaQuery.of(context).size.width * 0.1, // 30% of screen width
+        width: MediaQuery.of(context).size.width * 0.15, // 30% of screen width
+        decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 198, 226, 238),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
+            border: Border.all(
+                width: 0.5, color: const Color.fromARGB(255, 224, 224, 224))),
+
+        alignment: Alignment
+            .center, // Ensures the icon is centered inside the container
+        child: const Icon(
+          Icons.video_library,
+          size: 20,
+          color: Color.fromARGB(255, 52, 163,
+              253), // Optional: Set the icon color to white or any color you prefer
+        ),
+      ),
       title: Text(
         video['name'] as String,
         overflow: TextOverflow.ellipsis,

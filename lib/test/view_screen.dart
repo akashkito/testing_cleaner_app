@@ -2,15 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:testing_cleaner_app/battery/battery_page.dart';
-import 'package:testing_cleaner_app/storage/storage_info.dart';
 import 'package:testing_cleaner_app/test/device_info.dart';
 import 'package:testing_cleaner_app/test/homemainscreen.dart';
-import '../camera/camera_info.dart';
-import '../display/display_info_page.dart';
-import '../memory/memory_page.dart';
-import '../processor/processor_info.dart';
-import '../wifi/wifi_info_page.dart';
 
 class ViewPage extends StatefulWidget {
   const ViewPage({super.key});
@@ -386,23 +379,7 @@ class _ViewPageState extends State<ViewPage> {
             const SizedBox(height: 10),
             Text(_storageInfo),
 
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  const SizedBox(height: 20),
-                  
-                  ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const StorageInfoWidget()));
-                      },
-                      child: const Text('Get Storage Info')),
-                ],
-              ),
-            ),
+            
 
             // Display Battery Level
             ElevatedButton(

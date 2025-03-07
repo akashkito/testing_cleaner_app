@@ -119,7 +119,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
               // Video Timeline (Progress Bar) with time labels on both ends
               Positioned(
-                bottom: -5,
+                bottom: 10,
                 left: 15,
                 right: 15,
                 child: Column(

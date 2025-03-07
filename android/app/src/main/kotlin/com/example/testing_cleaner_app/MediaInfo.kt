@@ -257,141 +257,91 @@ fun loadImageScaled(activity: Activity, uri: Uri): Bitmap? {
         }
     }
 
-    // Fetch video files from MediaStore
+    // Fetch video files
     @RequiresApi(Build.VERSION_CODES.Q)
-fun getVideoFiles(activity: Activity): List<Map<String, Any?>> {
-    val files = mutableListOf<Map<String, Any?>>()
-    val resolver: ContentResolver = activity.contentResolver
+    fun getVideoFiles(activity: Activity): List<Map<String, Any?>> {
+        val files = mutableListOf<Map<String, Any?>>()
+        val resolver: ContentResolver = activity.contentResolver
 
-    // Define the projection (columns to fetch)
-    val projection = arrayOf(
-        MediaStore.Video.Media._ID,
-        MediaStore.Video.Media.DISPLAY_NAME,
-        MediaStore.Video.Media.SIZE,
-        MediaStore.Video.Media.DATE_ADDED
-    )
-
-    // Optional: limit number of items to avoid fetching all at once
-    val selection = "${MediaStore.Video.Media.MIME_TYPE} LIKE ?"
-    val selectionArgs = arrayOf("video/mp4") // Filter for .mp4 videos
-
-    // Query to fetch video files (this can be paginated with a LIMIT clause)
-    val cursor = resolver.query(
-        MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-        projection,
-        selection,
-        selectionArgs,
-        null // Here, you can add ordering, e.g., ORDER BY date or name
-    )
-
-    cursor?.use {
-        val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
-        val nameColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
-        val sizeColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
-        val dateColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)
-
-        while (it.moveToNext()) {
-            val id = it.getLong(idColumnIndex)
-            val name = it.getString(nameColumnIndex)
-            val size = it.getLong(sizeColumnIndex)
-            val date = it.getLong(dateColumnIndex)
-
-            val videoUri: Uri = ContentUris.withAppendedId(
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id
-            )
-            val path = getFilePathFromUri(activity, videoUri)
-
-            // Load the thumbnail using Glide
-            val imageView = ImageView(activity)  // Assuming you have an ImageView to show the thumbnail
-            loadVideoThumbnailUsingGlide(activity, videoUri, imageView)
-
-            // Ensure thumbnail generation if needed and add to data
-            val thumbnailPath = getVideoThumbnail(activity, videoUri)
-
-            if (path != null) {
-                val videoFile = mapOf<String, Any?>(
-                    "path" to path,
-                    "name" to name,
-                    "size" to size,
-                    "date" to date,
-                    "thumbnail" to thumbnailPath // Add thumbnail path to the data
-                )
-                files.add(videoFile)
-            }
-        }
-    }
-
-    return files
-}
-
-
-    @RequiresApi(Build.VERSION_CODES.Q)
-fun getVideoThumbnail(activity: Activity, uri: Uri): String? {
-    val resolver: ContentResolver = activity.contentResolver
-    val videoId = ContentUris.parseId(uri)
-
-    // Check if the videoId is valid
-    if (videoId == -1L) {
-        Log.e("MediaInfo", "Invalid video ID")
-        return null
-    }
-
-    try {
-        // Try to get the thumbnail bitmap
-        val thumbnailBitmap: Bitmap? = MediaStore.Video.Thumbnails.getThumbnail(
-            resolver,
-            videoId,
-            MediaStore.Video.Thumbnails.MINI_KIND,
-            null
+        // Define the projection (columns to fetch)
+        val projection = arrayOf(
+            MediaStore.Video.Media._ID,
+            MediaStore.Video.Media.DISPLAY_NAME,
+            MediaStore.Video.Media.SIZE,
+            MediaStore.Video.Media.DATE_ADDED
         )
 
-        // Check if the thumbnail was generated successfully
-        if (thumbnailBitmap != null) {
-            val tempFile = File(activity.cacheDir, "video_thumbnail_${System.currentTimeMillis()}.jpg")
-            val outputStream = FileOutputStream(tempFile)
-            thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
-            outputStream.flush()
-            outputStream.close()
+        // Optional: limit number of items to avoid fetching all at once
+        val selection = "${MediaStore.Video.Media.MIME_TYPE} LIKE ?"
+        val selectionArgs = arrayOf("video/mp4") // Filter for .mp4 videos
 
-            return tempFile.absolutePath // Return the path of the generated thumbnail
-        } else {
-            Log.e("MediaInfo", "Thumbnail is null.")
+        // Query to fetch video files (this can be paginated with a LIMIT clause)
+        val cursor = resolver.query(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            null // Here, you can add ordering, e.g., ORDER BY date or name
+        )
+
+        cursor?.use {
+            val idColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+            val nameColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
+            val sizeColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
+            val dateColumnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)
+
+            while (it.moveToNext()) {
+                val id = it.getLong(idColumnIndex)
+                val name = it.getString(nameColumnIndex)
+                val size = it.getLong(sizeColumnIndex)
+                val date = it.getLong(dateColumnIndex)
+
+                val videoUri: Uri = ContentUris.withAppendedId(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id
+                )
+
+                // Get file path from URI
+                val path = getFilePathFromUri(activity, videoUri)
+
+                if (path != null) {
+                    val videoFile = mapOf<String, Any?>(
+                        "path" to path,
+                        "name" to name,
+                        "size" to size,
+                        "date" to date
+                    )
+                    files.add(videoFile)
+                }
+            }
         }
-    } catch (e: Exception) {
-        Log.e("Error", "Error generating thumbnail: ${e.message}")
+
+        return files
     }
 
-    return null
-}
-
-
-   fun loadVideoThumbnail(activity: Activity, uri: Uri, imageView: ImageView) {
-    Glide.with(activity)
-        .load(uri)
-        .apply(RequestOptions().override(50, 50))  // Resize the thumbnail to 100x100 pixels for memory efficiency
-        .diskCacheStrategy(DiskCacheStrategy.ALL)  // Cache the thumbnail
-        .into(imageView)
-}
-
-fun loadVideoThumbnailUsingGlide(activity: Activity, uri: Uri, imageView: ImageView) {
-    Glide.with(activity)
-        .load(uri) // Glide will automatically handle video thumbnail generation
-        .apply(RequestOptions().override(100, 100)) // Resize the thumbnail to 100x100
-        .diskCacheStrategy(DiskCacheStrategy.ALL) // Cache images
-        .into(imageView)
-}
+    // Function to get file path from URI
+    fun getFilePathFromUri(activity: Activity, uri: Uri): String? {
+        var path: String? = null
+        val cursor = activity.contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val columnIndex = it.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
+                path = it.getString(columnIndex)
+            }
+        }
+        return path
+    }
 
     // Fetch video files asynchronously
     fun fetchVideoFilesAsync(activity: Activity) {
         CoroutineScope(Dispatchers.IO).launch {
             val files = getVideoFiles(activity)  // Your video fetching function
             withContext(Dispatchers.Main) {
-                // Update UI with video data here
+                // Update UI with video data here (without thumbnails)
             }
         }
     }
 
-    // Delete video method
+    // Function to delete video from storage
     fun deleteVideo(activity: Activity, videoPath: String) {
         try {
             // Get the URI for the video using MediaStore
@@ -423,24 +373,8 @@ fun loadVideoThumbnailUsingGlide(activity: Activity, uri: Uri, imageView: ImageV
         } catch (e: Exception) {
             Log.e("Error", "Error deleting video: ${e.message}")
         }
-    }
+    } 
 
-    // Get file path from URI (works for images, videos, and audios)
-    fun getFilePathFromUri(activity: Activity, uri: Uri): String? {
-        val cursor = activity.contentResolver.query(uri, null, null, null, null)
-        cursor?.use {
-            val columnIndex: Int = when {
-                uri.toString().contains("images") -> it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                uri.toString().contains("video") -> it.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
-                uri.toString().contains("audio") -> it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-                else -> return null // Return null if not image, video, or audio
-            }
-            if (it.moveToFirst()) {
-                return it.getString(columnIndex)
-            }
-        }
-        return null
-    }
 
     // Check if permission is granted
     fun isPermissionGranted(activity: Activity): Boolean {

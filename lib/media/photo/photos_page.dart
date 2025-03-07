@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:testing_cleaner_app/test/permission_service.dart';
 
 import '../../utility/audio_util.dart';
 import 'view_image.dart';
@@ -152,6 +153,14 @@ class _PhotosPageState extends State<PhotosPage> {
     }
   }
 
+// // Check permission status when the page loads
+//   void _checkPermission() async {
+//     bool permissionGranted = await PermissionService.requestPermission();
+//     setState(() {
+//       _isPermissionGranted = permissionGranted;
+//     });
+//   }
+
   // Fetch the photo files after permission is granted
   Future<void> _getPhotoFiles() async {
     setState(() {
@@ -187,19 +196,6 @@ class _PhotosPageState extends State<PhotosPage> {
         _isLoading = false;
         _photos = [];
       });
-    }
-  }
-
-  // Format the file size from bytes to a human-readable format
-  String formatFileSize(int bytes) {
-    if (bytes < 1024) {
-      return '$bytes B';
-    } else if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(2)} KB';
-    } else if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
-    } else {
-      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
     }
   }
 
@@ -275,6 +271,7 @@ class _PhotosPageState extends State<PhotosPage> {
   }
 
   // Calculate the total number of selected photos
+  // ignore: unused_element
   int _getSelectedPhotosCount() {
     return _selectedPhotos.length;
   }
@@ -328,22 +325,39 @@ class _PhotosPageState extends State<PhotosPage> {
       ),
       body: Builder(
         builder: (context) {
+          // if (!_isPermissionGranted) {
+          //   return Center(
+          //     child: Column(
+          //       mainAxisSize: MainAxisSize.min,
+          //       children: [
+          //         const Text(
+          //             'Storage permission is required to access photos.'),
+          //         const SizedBox(height: 20),
+          //         ElevatedButton(
+          //           onPressed: _requestPermission, // Request permission
+          //           child: const Text('Grant Permission'),
+          //         ),
+          //       ],
+          //     ),
+          //   );
+          // }
+
           if (!_isPermissionGranted) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                      'Storage permission is required to access photos.'),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _requestPermission, // Request permission
-                    child: const Text('Grant Permission'),
-                  ),
-                ],
-              ),
-            );
-          }
+      // Show message and button to request permission
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Storage permission is required to access photos.'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _requestPermission,
+              child: const Text('Grant Permission'),
+            ),
+          ],
+        ),
+      );
+    }
 
           // Show a loader when photos are still being fetched
           if (_photos.isEmpty && _isLoading) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:testing_cleaner_app/test/settings_page.dart';
 
 import '../../utility/audio_util.dart';
 import 'audio_delete_page.dart';
@@ -30,7 +31,6 @@ class _AudiosPageState extends State<AudiosPage> {
   void initState() {
     super.initState();
     _checkPermission();
-    
   }
 
   // Check and request permission
@@ -466,14 +466,15 @@ class _AudiosPageState extends State<AudiosPage> {
                                       builder: (context) {
                                         // We map the audios and include the duration fetching logic
                                         return SafeArea(
-                                          child: FutureBuilder<List<AudioTrack>>(
+                                          child:
+                                              FutureBuilder<List<AudioTrack>>(
                                             future:
                                                 _fetchAudioDataWithDuration(), // Call a function that fetches the list of AudioTrack objects with duration
                                             builder: (context, snapshot) {
                                               if (snapshot.connectionState ==
                                                   ConnectionState.waiting) {
-                                                return SafeArea(
-                                                  child: const Center(
+                                                return const SafeArea(
+                                                  child: Center(
                                                       child:
                                                           CircularProgressIndicator()),
                                                 ); // Show loading spinner while data is being fetched
@@ -487,17 +488,15 @@ class _AudiosPageState extends State<AudiosPage> {
                                               if (snapshot.hasData) {
                                                 var audioListWithDurations =
                                                     snapshot.data!;
-                                                return SafeArea(
-                                                  child: CarouselAudioPlayerPage(
-                                                    audioList:
-                                                        audioListWithDurations,
-                                                    initialIndex: index,
-                                                  ),
+                                                return CarouselAudioPlayerPage(
+                                                  audioList:
+                                                      audioListWithDurations,
+                                                  initialIndex: index,
                                                 );
                                               } else {
                                                 return const SafeArea(
-                                                  child: Text(
-                                                      'No Data Available'),
+                                                  child:
+                                                      Text('No Data Available'),
                                                 );
                                               }
                                             },
@@ -517,7 +516,8 @@ class _AudiosPageState extends State<AudiosPage> {
                                         : Colors.transparent,
                                     border: Border.all(
                                       color: isSelected
-                                          ? const Color.fromARGB(255, 87, 176, 248)
+                                          ? const Color.fromARGB(
+                                              255, 87, 176, 248)
                                           : Colors
                                               .transparent, // Border color based on selection
                                       width: 1, // Adjust border width as needed
@@ -531,12 +531,13 @@ class _AudiosPageState extends State<AudiosPage> {
                                       Container(
                                         height:
                                             MediaQuery.of(context).size.width *
-                                                0.3, // 30% of screen width
+                                                0.295, // 30% of screen width
                                         width:
                                             MediaQuery.of(context).size.width *
                                                 0.3, // 30% of screen width
                                         decoration: BoxDecoration(
-                                            color: const Color.fromARGB(255, 198, 226, 238),
+                                            color: const Color.fromARGB(
+                                                255, 198, 226, 238),
                                             borderRadius:
                                                 const BorderRadius.all(
                                                     Radius.circular(10)),
@@ -550,7 +551,8 @@ class _AudiosPageState extends State<AudiosPage> {
                                         child: const Icon(
                                           Icons.audiotrack,
                                           size: 30,
-                                          color: Color.fromARGB(255, 52, 163, 253), // Optional: Set the icon color to white or any color you prefer
+                                          color: Color.fromARGB(255, 52, 163,
+                                              253), // Optional: Set the icon color to white or any color you prefer
                                         ),
                                       ),
                                       Padding(
@@ -670,6 +672,12 @@ class _AudiosPageState extends State<AudiosPage> {
                                     },
                                   ),
                                 );
+                                // Navigator.push(
+                                //     context,
+                                //     MaterialPageRoute(
+                                //       builder: (context) =>
+                                //           const SettingsPage(),
+                                //     ));
                               },
                               leading: const Icon(Icons.audiotrack),
                               title: Text(

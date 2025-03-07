@@ -6,7 +6,7 @@ import 'package:testing_cleaner_app/test/speed_screen.dart';
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
-  @override 
+  @override
   _MainScreenState createState() => _MainScreenState();
 }
 
@@ -14,7 +14,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0; // Track selected index
 
   // List of mock screens (pages)
-  final List<Widget> _pages = [
+  final List<Widget> _pages = [ 
     const HomeScreen2(),
     const PremiumScreen(),
     const SpeedScreen(),
@@ -30,6 +30,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: _pages[_selectedIndex], // Display the current page
       bottomNavigationBar: Padding(
         padding:
@@ -60,10 +61,10 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                     ],
                   ),
-                  child: Icon(Icons.clean_hands_rounded, color: _selectedIndex == 0
-                        ? Colors.white
-                        : const Color.fromARGB(255, 6, 135, 190)
-                        ),
+                  child: Icon(Icons.clean_hands_rounded,
+                      color: _selectedIndex == 0
+                          ? Colors.white
+                          : const Color.fromARGB(255, 6, 135, 190)),
                 ),
               ),
               // Second icon (Premium)
@@ -103,7 +104,9 @@ class _MainScreenState extends State<MainScreen> {
                       ? const EdgeInsets.all(25)
                       : const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: _selectedIndex ==2 ?const Color.fromARGB(255, 6, 135, 190) : Colors.white , // Highlight when selected
+                    color: _selectedIndex == 2
+                        ? const Color.fromARGB(255, 6, 135, 190)
+                        : Colors.white, // Highlight when selected
                     borderRadius: BorderRadius.circular(60),
                     boxShadow: [
                       BoxShadow(

@@ -42,40 +42,95 @@ class _CarouselAudioPlayerPageState extends State<CarouselAudioPlayerPage> {
     _audioPlayer.dispose();
   }
 
-  Future<void> _loadAudio() async {
-    setState(() {
-      _isLoading = true;
+  // Future<void> _loadAudio() async {
+  //   setState(() {
+  //     _isLoading = true;
+  //   });
+  //   try {
+  //     // Start playing the audio
+  //     await _audioPlayer.setUrl(_currentTrack.url);
+  //     _audioPlayer.durationStream.listen((duration) {
+  //       setState(() {
+  //         _duration = duration!;
+  //       });
+  //     });
+
+  //     _audioPlayer.positionStream.listen((position) {
+  //       setState(() {
+  //         _position = position;
+  //         _currentPosition = position.inSeconds.toDouble();
+  //       });
+  //     });
+
+  //     // Once the audio is loaded, start it immediately
+  //     await _audioPlayer
+  //         .setAudioSource(AudioSource.uri(Uri.parse(_currentTrack.url)));
+  //     setState(() {
+  //       _isPlaying = true;
+  //       _isLoading = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       _isLoading = false;
+  //     });
+  //     print('Error loading audio: $e');
+  //   }
+  // }
+
+Future<void> _loadAudio() async {
+  setState(() {
+    _isLoading = true;
+  });
+  try {
+    await _audioPlayer.setUrl(_currentTrack.url);
+    _audioPlayer.durationStream.listen((duration) {
+      setState(() {
+        _duration = duration!;
+      });
     });
-    try {
-      // Start playing the audio
-      await _audioPlayer.setUrl(_currentTrack.url);
-      _audioPlayer.durationStream.listen((duration) {
-        setState(() {
-          _duration = duration!;
-        });
-      });
 
-      _audioPlayer.positionStream.listen((position) {
-        setState(() {
-          _position = position;
-          _currentPosition = position.inSeconds.toDouble();
-        });
+    _audioPlayer.positionStream.listen((position) {
+      setState(() {
+        _position = position;
+        _currentPosition = position.inSeconds.toDouble();
       });
+    });
 
-      // Once the audio is loaded, start it immediately
-      await _audioPlayer
-          .setAudioSource(AudioSource.uri(Uri.parse(_currentTrack.url)));
-      setState(() {
-        _isPlaying = true;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      print('Error loading audio: $e');
-    }
+    await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(_currentTrack.url)));
+    setState(() {
+      _isPlaying = true;
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      _isLoading = false;
+    });
+    print('Error loading audio: $e');
+    _showErrorDialog('Failed to load audio. Please try again later.');
   }
+}
+
+void _showErrorDialog(String message) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 
   void _togglePlayPause() {
     if (_isPlaying) {

@@ -275,17 +275,18 @@ class _AppsPageState extends State<AppsPage>
     super.initState();
     _tabController = TabController(length: 5, vsync: this); // Now 5 tabs
     getInstalledApps();
+    filterApps(0);
   }
 
   // Filter based on selected tab
   void filterApps(int index) {
     setState(() {
       if (index == 0) {
+        filteredApps = apps; // Show all apps (including system and hidden)
+      } else if (index == 1) {
         filteredApps = apps
             .where((app) => app["isSystemApp"] == "false")
             .toList(); // Show only installed apps
-      } else if (index == 1) {
-        filteredApps = apps; // Show all apps (including system and hidden)
       } else if (index == 2) {
         filteredApps = apps
             .where((app) => app["isSystemApp"] == "true")
@@ -331,8 +332,8 @@ class _AppsPageState extends State<AppsPage>
             filterApps(index); // Update apps list when switching tabs
           },
           tabs: const [
-            Tab(text: 'Installed Apps'),
-            Tab(text: 'All Apps'), // Added tab for All Apps
+            Tab(text: 'All Apps'),
+            Tab(text: 'Installed Apps'), // Added tab for All Apps
             Tab(text: 'System Apps'),
             Tab(text: 'Disabled Apps'),
             Tab(text: 'Hidden Apps'),
@@ -386,8 +387,8 @@ class _AppsPageState extends State<AppsPage>
         ],
       ),
       body: filteredApps.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+                ? Center(child: Text("No apps found")) // Show message if no apps match the filter
+                : Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),

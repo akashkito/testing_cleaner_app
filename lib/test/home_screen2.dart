@@ -6,7 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_cleaner_app/files/all_files.dart';
 import 'package:testing_cleaner_app/liquid_swipe_page.dart';
 import 'package:testing_cleaner_app/media/video/videos_page.dart';
+import 'package:testing_cleaner_app/other%20files/otherfiles.dart';
 import 'package:testing_cleaner_app/system_info_page.dart';
+import 'package:testing_cleaner_app/test/settings_page.dart';
 import 'package:testing_cleaner_app/test/view_screen.dart';
 
 import '../apps/apps_page.dart';
@@ -39,138 +41,146 @@ class _HomeScreen2State extends State<HomeScreen2> {
     }
   }
 
+  // // Simulate a task (e.g., loading data for apps)
+  // Future<void> _loadApps() async {
+  //   await Future.delayed(const Duration(seconds: 1)); // Simulate loading task
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       drawer: Drawer(
+        backgroundColor: const Color.fromARGB(255, 250, 250, 250),
+        width: 280,
         elevation: 0,
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              padding: EdgeInsets.only(top: 17, left: 20),
+              decoration: const BoxDecoration(
                 color: Colors.white,
               ),
+              // ignore: sort_child_properties_last
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.cleaning_services,
+                        size: 25,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        "KitoCleaner",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 15,),
+                  Text(
+                    "Pro tip",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 15,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w700
+                    ),
+                  ),
+                  Container(
+                    width: 220,
+                    child: Text(
+                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w400
+                      ),
+                    ),
+                  )
+                ],
+              ),
+              duration: const Duration(milliseconds: 1000),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Text(
-                'Logo',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold),
+                "Storage",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey,
+                ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text("Storage"),
-            ),
-            ListTile(
-              leading: const Icon(Icons.apps),
-              title: const Text('Apps'),
-              onTap: () {
-                // Handle Item 1
-              },
-              trailing: const Text(
-                "50 GB",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.apps),
-              title: const Text('Photos'),
-              onTap: () {
-                // Handle Item 1
-              },
-              trailing: const Text(
-                "50 GB",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.apps),
-              title: const Text('Videos'),
-              onTap: () {
-                // Handle Item 1
-              },
-              trailing: const Text(
-                "50 GB",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.apps),
-              title: const Text('Audios'),
-              onTap: () {
-                // Handle Item 1
-              },
-              trailing: const Text(
-                "50 GB",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.apps),
-              title: const Text('Other Files'),
-              onTap: () {
-                // Handle Item 1
-              },
-              trailing: const Text(
-                "50 GB",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
+            drawerlist(
+                Image.asset(
+                  'assets/app_icon.png',
+                  width: 25,
+                ),
+                'Apps',
+                '',
+                () {}),
+            drawerlist(
+                Image.asset(
+                  'assets/photo_icon.png',
+                  width: 25,
+                ),
+                'Photos',
+                '',
+                () {}),
+            drawerlist(
+                Image.asset(
+                  'assets/videos_icon.png',
+                  width: 25,
+                ),
+                'Videos',
+                '',
+                () {}),
+            drawerlist(
+                Image.asset(
+                  'assets/audios_icon.png',
+                  width: 25,
+                ),
+                'Audios',
+                '',
+                () {}),
             const Divider(),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('System Info'),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SystemInfoPage(),
-                    ));
-              },
-              trailing: const Text(
-                "50 GB",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('swiper'),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LiquidSwipePage(),
-                    ));
-              },
-              trailing: const Text(
-                "50 GB",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
+            drawerlist(
+                Image.asset(
+                  'assets/app_icon.png',
+                  width: 25,
+                ),
+                'System Info',
+                '', () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SystemInfoPage(),
+                  ));
+            }),
+            drawerlist(
+                Image.asset(
+                  'assets/audios_icon.png',
+                  width: 25,
+                ),
+                'Swiper',
+                '', () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LiquidSwipePage(),
+                  ));
+            }),
           ],
         ),
       ),
@@ -202,7 +212,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
 
                   //App bar
                   Positioned(
-                      top: 50,
+                      top: 40,
                       width: MediaQuery.of(context).size.width,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -237,24 +247,34 @@ class _HomeScreen2State extends State<HomeScreen2> {
                                 ),
                               ),
                             ),
-                            Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(30),
-                                  boxShadow: [
-                                    BoxShadow(
-                                        color: Colors.grey.withOpacity(0.4),
-                                        blurRadius:50,
-                                        offset: const Offset(0, 0),
-                                        spreadRadius: 1)
-                                  ],
-                                ),
-                                // ignore: prefer_const_constructors
-                                child: Icon(
-                                  Icons.settings,
-                                  size: 30,
-                                )),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SettingsPage(),
+                                    ));
+                              },
+                              child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.grey.withOpacity(0.4),
+                                          blurRadius: 50,
+                                          offset: const Offset(0, 0),
+                                          spreadRadius: 1)
+                                    ],
+                                  ),
+                                  // ignore: prefer_const_constructors
+                                  child: Icon(
+                                    Icons.settings,
+                                    size: 30,
+                                  )),
+                            ),
                           ],
                         ),
                       )),
@@ -278,7 +298,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           //     ),
                           //   ],
                           // ),
-                          child: StoragePieChartWidget())),
+                          child: const StoragePieChartWidget())),
 
                   //Button
                   Positioned(
@@ -286,8 +306,8 @@ class _HomeScreen2State extends State<HomeScreen2> {
                     top: 265,
                     child: Center(
                       child: Container(
-                        width: 150,
-                        height: 60,
+                        width: 170,
+                        height: 65,
                         decoration: BoxDecoration(
                           color: const Color.fromARGB(255, 8, 108, 126),
                           borderRadius: BorderRadius.circular(120),
@@ -304,20 +324,20 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           // Add InkWell for the pressed effect
                           onTap: () {
                             // Navigate to the next screen
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) =>
-                            //         const ViewPage(), // Replace with your next screen
-                            //   ),
-                            // );
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    FolderAccessPage(), // Replace with your next screen
+                                    const ViewPage(), // Replace with your next screen
                               ),
                             );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) =>
+                            //         FolderAccessPage(), // Replace with your next screen
+                            //   ),
+                            // );
                           },
                           splashColor: const Color.fromARGB(255, 86, 145, 194)
                               .withOpacity(0.3), // Splash color on tap
@@ -326,7 +346,7 @@ class _HomeScreen2State extends State<HomeScreen2> {
                             child: Text(
                               "Quick Clean",
                               style: GoogleFonts.poppins(
-                                  fontSize: 17,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white),
                             ),
@@ -401,6 +421,26 @@ class _HomeScreen2State extends State<HomeScreen2> {
                           );
                         },
                       ),
+                      // _buildGridItem(
+                      //   context,
+                      //   "Apps",
+                      //   'assets/app_icon.png',
+                      //   totalStorage,
+                      //   () async {
+                      //     // Navigate to PercentIndicatorPage with a simulated loading task
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) => PercentIndicatorPage(
+                      //           loadingTask:
+                      //               _loadApps(), // Simulate the loading task
+                      //           targetPage:
+                      //               AppsPage(), // Navigate to AppsPage after loading is complete
+                      //         ),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
                       _buildGridItem(
                         context,
                         "Photos",
@@ -409,9 +449,11 @@ class _HomeScreen2State extends State<HomeScreen2> {
                         totalStorage,
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const PhotosPage()),
+                          MaterialPageRoute(
+                              builder: (context) => const PhotosPage()),
                         ),
                       ),
+
                       _buildGridItem(
                         context,
                         "Videos",
@@ -419,9 +461,11 @@ class _HomeScreen2State extends State<HomeScreen2> {
                         totalStorage,
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const VideosPage()),
+                          MaterialPageRoute(
+                              builder: (context) => const VideosPage()),
                         ),
                       ),
+
                       _buildGridItem(
                         context,
                         "Audios",
@@ -429,203 +473,48 @@ class _HomeScreen2State extends State<HomeScreen2> {
                         totalStorage,
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const AudiosPage()),
+                          MaterialPageRoute(
+                              builder: (context) => const AudiosPage()),
                         ),
                       ),
                     ],
                   );
                 },
               ),
-
-// GridView.builder(
-//                     physics: BouncingScrollPhysics(),
-//                     scrollDirection: Axis.vertical,
-//                     shrinkWrap: true,
-//                     itemCount: 4,
-//                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//                       crossAxisCount: 2,
-//                     ),
-//                     itemBuilder: (context, index) {
-//                       return Padding(
-//                         padding: const EdgeInsets.only(
-//                             top: 10, left: 10, right: 10, bottom: 10),
-//                         child: Container(
-//                           padding: const EdgeInsets.symmetric(
-//                               vertical: 15, horizontal: 15),
-//                           decoration: BoxDecoration(
-//                             color: Colors.white,
-//                             borderRadius: BorderRadius.circular(12),
-//                             boxShadow: [
-//                               BoxShadow(
-//                                 color: Colors.grey.withOpacity(0.4),
-//                                 blurRadius: 10,
-//                                 offset: const Offset(0, 20),
-//                                 spreadRadius: 1,
-//                               ),
-//                             ],
-//                           ),
-//                           child: Column(
-//                             crossAxisAlignment: CrossAxisAlignment.start,
-//                             mainAxisAlignment: MainAxisAlignment.center,
-//                             children: [
-//                               //First Row
-//                               SizedBox(
-//                                 width: MediaQuery.of(context).size.width,
-//                                 child: Row(
-//                                   crossAxisAlignment: CrossAxisAlignment.start,
-//                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                                   children: [
-//                                     Container(
-//                                       padding: const EdgeInsets.all(15),
-//                                       decoration: BoxDecoration(
-//                                         borderRadius: BorderRadius.circular(15),
-//                                         color: Colors.white,
-//                                         border: Border.all(
-//                                             color: Colors.grey, width: 0.5),
-//                                       ),
-//                                       child: const Icon(
-//                                         Icons.photo,
-//                                         size: 30,
-//                                       ),
-//                                     ),
-//                                     Container(
-//                                       padding: const EdgeInsets.symmetric(
-//                                         vertical: 5,
-//                                         horizontal: 10,
-//                                       ),
-//                                       decoration: BoxDecoration(
-//                                         borderRadius: BorderRadius.circular(20),
-//                                         color: Colors.white,
-//                                         border: Border.all(
-//                                             color: Colors.grey, width: 0.5),
-//                                       ),
-//                                       child: const Text("50 GB"),
-//                                     )
-//                                   ],
-//                                 ),
-//                               ),
-//                               const SizedBox(
-//                                 height: 10,
-//                               ),
-//                               const Row(
-//                                 children: [
-//                                   Text(
-//                                     "Videos",
-//                                     style: TextStyle(
-//                                       fontSize: 20,
-//                                       fontWeight: FontWeight.bold,
-//                                     ),
-//                                   ),
-//                                 ],
-//                               ),
-//                               const Row(
-//                                 children: [
-//                                   Text(
-//                                     "100 items",
-//                                     style: TextStyle(color: Colors.grey),
-//                                   )
-//                                 ],
-//                               )
-//                             ],
-//                           ),
-//                         ),
-//                       );
-//                     },
-//                   ),
             ),
           )
-
-          //footer
-          // Padding(
-          //   padding: const EdgeInsets.only(bottom: 50, left: 40, right: 40, top: 10),
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //     children: [
-          //       Container(
-          //           padding: const EdgeInsets.all(25),
-          //           decoration: BoxDecoration(
-          //             color: Colors.white,
-          //             borderRadius: BorderRadius.circular(60),
-          //             boxShadow: [
-          //               BoxShadow(
-          //                 color: Colors.grey.withOpacity(0.4),
-          //                 blurRadius: 20,
-          //                 offset: const Offset(0, 0),
-          //                 spreadRadius: 1,
-          //               ),
-          //             ],
-          //           ),
-          //           child: const Icon(Icons.clean_hands_rounded)),
-          //       Container(
-          //           padding: const EdgeInsets.all(25),
-          //           decoration: BoxDecoration(
-          //             color: Colors.white,
-          //             borderRadius: BorderRadius.circular(60),
-          //             boxShadow: [
-          //               BoxShadow(
-          //                 color: Colors.grey.withOpacity(0.4),
-          //                 blurRadius: 20,
-          //                 offset: const Offset(0, 0),
-          //                 spreadRadius: 1,
-          //               ),
-          //             ],
-          //           ),
-          //           child: const Icon(
-          //             Icons.workspace_premium,
-          //           )),
-          //       Container(
-          //         padding: const EdgeInsets.all(25),
-          //         decoration: BoxDecoration(
-          //           color: Colors.white,
-          //           borderRadius: BorderRadius.circular(60),
-          //           boxShadow: [
-          //             BoxShadow(
-          //               color: Colors.grey.withOpacity(0.4),
-          //               blurRadius: 20,
-          //               offset: const Offset(0, 0),
-          //               spreadRadius: 1,
-          //             ),
-          //           ],
-          //         ),
-          //         child: const Icon(Icons.speed),
-          //       ),
-          //     ],
-          //   ),
-          // )
         ],
       ),
     );
   }
 
-//   Widget _buildGridItem(
-//     BuildContext context,
-//     String title,
-//     IconData icon,
-//     int totalStorage,
-//     Function onTap,
-//   ) {
-//     return GestureDetector(
-//       onTap: () => onTap(),
-//       child: Card(
-//         margin: EdgeInsets.all(8),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: <Widget>[
-//             Icon(icon, size: 50),
-//             SizedBox(height: 10),
-//             Text(title,
-//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-//             SizedBox(height: 5),
-//             Text(
-//               'Total Storage: ${totalStorage / (1024 * 1024 * 1024)} GB',
-//               textAlign: TextAlign.center,
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+  ListTile drawerlist(
+      Image? img, String? title, String? subtxt, GestureTapCallback? ontap) {
+    return ListTile(
+      leading: img,
+      title: Padding(
+        padding: const EdgeInsets.only(
+          left: 20.0,
+        ),
+        child: Text(
+          title!,
+          style: GoogleFonts.montserrat(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      onTap: ontap,
+      trailing: Text(
+        subtxt!,
+        style: GoogleFonts.montserrat(
+          fontSize: 14,
+          color: Colors.grey,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
 
   Widget _buildGridItem(
     BuildContext context,
@@ -665,22 +554,25 @@ class _HomeScreen2State extends State<HomeScreen2> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
-                        border: Border.all(
-                          color: Colors.grey,
-                          width: 0.5,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white,
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 0.5,
+                          ),
                         ),
-                      ),
-                      child: 
-                      Image.asset(img, width: 30,height: 30,)
-                      // Icon(
-                      //   icon,
-                      //   size: 30,
-                      // ),
-                    ),
+                        child: Image.asset(
+                          img,
+                          width: 30,
+                          height: 30,
+                        )
+                        // Icon(
+                        //   icon,
+                        //   size: 30,
+                        // ),
+                        ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(

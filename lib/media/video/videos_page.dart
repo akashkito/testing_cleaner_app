@@ -78,7 +78,13 @@ class _VideosPageState extends State<VideosPage> {
 
         for (var video in videos) {
           final videoMap = Map<String, dynamic>.from(video);
-          final videoPath = videoMap['path'] as String;
+          final videoPath = videoMap['path'] as String?;
+
+          // Check if path is null before using it
+          if (videoPath == null) {
+            continue; // Skip the video if path is null
+          }
+
           final videoExists = _videos
               .any((existingVideo) => existingVideo['path'] == videoPath);
 
@@ -88,7 +94,7 @@ class _VideosPageState extends State<VideosPage> {
               'name': videoMap['name'] as String,
               'size': videoMap['size'] as int,
               'date': videoMap['date'] as int,
-              'thumbnail': videoMap['thumbnail'] as String,
+              // 'thumbnail': videoMap['thumbnail'] as String,
             });
           }
         }
@@ -431,73 +437,135 @@ class _VideosPageState extends State<VideosPage> {
               ),
               Expanded(
                 child: _isGridView
-                    ? GridView.builder(
-                        controller: _scrollController,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                        itemCount: _videos.length,
-                        itemBuilder: (context, index) {
-                          final video = _videos[index];
-                          final isSelected = _selectedVideos.contains(video);
+                    ? Padding(
+                      padding: const EdgeInsets.only(left: 10, right: 10),
+                      child: GridView.builder(
+                          controller: _scrollController,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.8
+                          ),
+                          itemCount: _videos.length,
+                          itemBuilder: (context, index) {
+                            final video = _videos[index];
+                            final isSelected = _selectedVideos.contains(video);
+                      
+                            return GestureDetector(
+                                child: GridTile(
+                              child: GestureDetector(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.lightBlueAccent.withOpacity(0.3)
+                                        : Colors
+                                            .transparent, // Light blue background when selected
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.blue
+                                          : Colors
+                                              .transparent, // Blue border when selected
+                                      width: 0.5, // Border width
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                        8), // Optional: Adds rounded corners
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      // Expanded(
+                                      //   child: 
+                                      //   // video['thumbnail'] != null &&
+                                      //   //         (video['thumbnail'] as String)
+                                      //   //             .isNotEmpty
+                                      //   //     ? Image.file(
+                                      //   //         File(
+                                      //   //             video['thumbnail'] as String),
+                                      //   //         fit: BoxFit.cover,
+                                      //   //       )
+                                      //   //     : 
+                                            
+                                      //       const Icon(Icons.video_library,
+                                      //           size: 40),
+                                      // ),
+                                      Container(
+                                        height:
+                                            MediaQuery.of(context).size.width *
+                                                0.22, // 30% of screen width
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.3, // 30% of screen width
+                                        decoration: BoxDecoration(
+                                            color: const Color.fromARGB(
+                                                255, 198, 226, 238),
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                                    Radius.circular(10)),
+                                            border: Border.all(
+                                                width: 0.5,
+                                                color: const Color.fromARGB(
+                                                    255, 224, 224, 224))),
 
-                          return GestureDetector(
-                            child: GridTile(
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: video['thumbnail'] != null &&
-                                            (video['thumbnail'] as String)
-                                                .isNotEmpty
-                                        ? Image.file(
-                                            File(video['thumbnail'] as String),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : const Icon(Icons.video_library,
-                                            size: 50),
-                                  ),
-                                  Text(formatFileSize(
-                                    video['size'] as int,),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black54,
-                                    
-                                  )),
-                                  Checkbox(
-                                    value: isSelected,
-                                    onChanged: (bool? selected) {
-                                      setState(() {
-                                        if (selected == true) {
-                                          _selectedVideos.add(video);
-                                        } else {
-                                          _selectedVideos.remove(video);
-                                        }
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            onTap: () {
-                              // Navigate to the VideoPlayerPage when a video is tapped
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => VideoPlayerPage(
-                                    videoPath: video['path'] as String,
+                                        alignment: Alignment
+                                            .center, // Ensures the icon is centered inside the container
+                                        child: const Icon(
+                                          Icons.video_library,
+                                          size: 30,
+                                          color: Color.fromARGB(255, 52, 163,
+                                              253), // Optional: Set the icon color to white or any color you prefer
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              formatFileSize(
+                                                  video['size'] as int),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                              style: GoogleFonts.montserrat(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                            Checkbox(
+                                              value: isSelected,
+                                              onChanged: (bool? selected) {
+                                                setState(() {
+                                                  if (selected == true) {
+                                                    _selectedVideos.add(video);
+                                                  } else {
+                                                    _selectedVideos.remove(video);
+                                                  }
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            },
-                          );
-                        },
-                      )
+                                onTap: () {
+                                  // Navigate to the VideoPlayerPage when a video is tapped
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => VideoPlayerPage(
+                                        videoPath: video['path'] as String,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ));
+                          }),
+                    )
                     : ListView.builder(
                         controller: _scrollController,
                         itemCount: _videos.length,

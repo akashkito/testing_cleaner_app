@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element, library_private_types_in_public_api
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -49,7 +51,7 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
           await platform.invokeMethod('getAppUsageStats');
       return stats.map((e) => Map<String, dynamic>.from(e)).toList();
     } on PlatformException catch (e) {
-      print("Failed to get app usage stats: '${e.message}'.");
+      debugPrint("Failed to get app usage stats: '${e.message}'.");
       return [];
     }
   }
@@ -104,6 +106,7 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
 
     // Decode the app icon if it exists, otherwise use default icon
     String? appIconString = app['appIcon'];
+    // ignore: unused_local_variable
     Widget appIcon = appIconString != null && appIconString.isNotEmpty
         ? tryDecodeBase64(appIconString)
         : const Icon(Icons.app_blocking);
@@ -131,7 +134,6 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
         return 'N/A'; // Return N/A in case of an error or invalid size
       }
     }
-    
 
     String screenTime = 'N/A';
 // Find the screen time data for the selected app
@@ -150,8 +152,6 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
               .toString()
           : 'N/A';
     }
-
-             
 
     return Scaffold(
       appBar: AppBar(
@@ -305,28 +305,28 @@ class _AppDetailsPageState extends State<AppDetailsPage> {
 
   // Helper function to build data for the Bar Chart
   List<BarChartGroupData> _buildBarChartData() {
-  return usageStatsList.map((app) {
-    // Ensure totalTime is not null or invalid
-    double totalTimeInSeconds = 0.0;
-    if (app['totalTime'] != null) {
-      try {
-        // Convert milliseconds to seconds and ensure it's a valid number
-        totalTimeInSeconds = (app['totalTime'] / 1000).toDouble();
-      } catch (e) {
-        print('Error parsing totalTime: $e');
+    return usageStatsList.map((app) {
+      // Ensure totalTime is not null or invalid
+      double totalTimeInSeconds = 0.0;
+      if (app['totalTime'] != null) {
+        try {
+          // Convert milliseconds to seconds and ensure it's a valid number
+          totalTimeInSeconds = (app['totalTime'] / 1000).toDouble();
+        } catch (e) {
+          debugPrint('Error parsing totalTime: $e');
+        }
       }
-    }
 
-    return BarChartGroupData(
-      x: app['packageName'].hashCode, // Use package name's hashCode as x-value
-      barRods: [
-        BarChartRodData(
-          toY: totalTimeInSeconds, // Pass valid value to Y-axis
-          color: Colors.blue,
-        ),
-      ],
-    );
-  }).toList();
-}
-
+      return BarChartGroupData(
+        x: app['packageName']
+            .hashCode, // Use package name's hashCode as x-value
+        barRods: [
+          BarChartRodData(
+            toY: totalTimeInSeconds, // Pass valid value to Y-axis
+            color: Colors.blue,
+          ),
+        ],
+      );
+    }).toList();
+  }
 }

@@ -1,8 +1,6 @@
 package com.example.your_app_name
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import io.flutter.plugin.common.MethodChannel
@@ -20,8 +18,10 @@ class FileAccessPhone {
 
     companion object {
 
+        private val CHUNK_SIZE = 50 // Number of files to load per request
+
         // Example of converting FileItem to a Map
-        fun getFilesInDirectory(context: Context, directoryPath: String): List<Map<String, Any>> {
+        fun getFilesInDirectory(context: Context, directoryPath: String, offset: Int): List<Map<String, Any>> {
             val filesList = mutableListOf<Map<String, Any>>()
             val dir = File(directoryPath)
 
@@ -33,7 +33,7 @@ class FileAccessPhone {
 
             if (dir.exists() && dir.isDirectory) {
                 // Recursively search for files in this directory and its subdirectories
-                searchFiles(dir, filesList, fileExtensions)
+                searchFiles(dir, filesList, fileExtensions, offset)
             } else {
                 println("Directory does not exist or is not a directory: $directoryPath")
             }
@@ -42,23 +42,26 @@ class FileAccessPhone {
             return filesList
         }
 
-        private fun searchFiles(dir: File, filesList: MutableList<Map<String, Any>>, extensions: List<String>) {
+        private fun searchFiles(dir: File, filesList: MutableList<Map<String, Any>>, extensions: List<String>, offset: Int) {
             val files = dir.listFiles()
+            var counter = 0
             files?.forEach { file ->
-                if (file.isDirectory) {
-                    searchFiles(file, filesList, extensions)
-                } else {
-                    if (extensions.any { file.name.endsWith(it, ignoreCase = true) }) {
-                        // Create a Map from the FileItem
-                        val fileItemMap = mapOf(
-                            "name" to file.name,
-                            "size" to file.length(),
-                            "icon" to getIconForFile(file), // Replace with your actual logic for getting an icon
-                            "path" to file.absolutePath
-                        )
-                        filesList.add(fileItemMap)
-                    }
+                // Check if the file matches the desired file extensions
+                if (counter >= offset && extensions.any { file.name.endsWith(it, ignoreCase = true) }) {
+                    // Create a Map from the FileItem
+                    val fileItemMap = mapOf(
+                        "name" to file.name,
+                        "size" to file.length(),
+                        "icon" to getIconForFile(file), // Replace with your actual logic for getting an icon
+                        "path" to file.absolutePath
+                    )
+                    filesList.add(fileItemMap)
                 }
+                if (file.isDirectory) {
+                    searchFiles(file, filesList, extensions, offset)
+                }
+                counter++
+                if (filesList.size >= CHUNK_SIZE) return // Stop once we reach the desired chunk size
             }
         }
 
@@ -72,25 +75,14 @@ class FileAccessPhone {
             }
         }
 
-        // Method to get special folders (including the new ones you requested)
-        fun getSpecialFolders(context: Context): List<String> {
-            val specialFolders = mutableListOf<String>()
-
-            // Add the folders you want to search
-            specialFolders.add("/storage/emulated/0/Download")  // Downloads
-            specialFolders.add("/data/data/com.example.your_app_name/cache")  // Cache
-            specialFolders.add("/data/data/com.example.your_app_name/.cache")  // Hidden Cache
-            specialFolders.add("/data/app")  // APKs
-            specialFolders.add("/storage/emulated/0/.thumbnails")  // Thumbnails
-            specialFolders.add("/data/data/com.example.your_app_name/files/temporary")  // Temporary Files
-            specialFolders.add("/storage/emulated/0/")  // General storage for large files
-            specialFolders.add("/storage/emulated/0/")  // Empty folders
-
-            // Add any residual or junk folders (can vary based on device or app structure)
-            specialFolders.add("/data/data/com.example.your_app_name/.residual")
-            specialFolders.add("/storage/emulated/0/.junk")
-            
-            return specialFolders
+        // Method to delete a file
+        fun deleteFile(filePath: String): Boolean {
+            val file = File(filePath)
+            return if (file.exists()) {
+                file.delete()
+            } else {
+                false
+            }
         }
 
         // Method to check if permission is granted (to access external storage)
@@ -107,6 +99,22 @@ class FileAccessPhone {
             } else {
                 result.success(true)  // Permission granted
             }
+        }
+
+        // Method to get special folders (including the new ones you requested)
+        fun getSpecialFolders(context: Context): List<String> {
+            val specialFolders = mutableListOf<String>()
+            specialFolders.add("/storage/emulated/0/Download")  // Downloads
+            specialFolders.add("/data/data/com.example.your_app_name/cache")  // Cache
+            specialFolders.add("/data/data/com.example.your_app_name/.cache")  // Hidden Cache
+            specialFolders.add("/data/app")  // APKs
+            specialFolders.add("/storage/emulated/0/.thumbnails")  // Thumbnails
+            specialFolders.add("/data/data/com.example.your_app_name/files/temporary")  // Temporary Files
+            specialFolders.add("/storage/emulated/0/")  // General storage for large files
+            specialFolders.add("/storage/emulated/0/")  // Empty folders
+            specialFolders.add("/data/data/com.example.your_app_name/.residual")  // Junk or residual folders
+            specialFolders.add("/storage/emulated/0/.junk")  // Junk
+            return specialFolders
         }
 
         // Method to find empty directories within a given path
